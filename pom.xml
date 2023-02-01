@@ -11,6 +11,10 @@
 	</parent>
 
 	<name>Explore With Me</name>
+	<modules>
+		<module>main-service</module>
+		<module>stats</module>
+	</modules>
 
 	<groupId>ru.practicum</groupId>
 	<artifactId>explore-with-me</artifactId>
@@ -25,6 +29,18 @@
 	<build>
 		<pluginManagement>
 			<plugins>
+				<plugin>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-maven-plugin</artifactId>
+					<configuration>
+						<excludes>
+							<exclude>
+								<groupId>org.projectlombok</groupId>
+								<artifactId>lombok</artifactId>
+							</exclude>
+						</excludes>
+					</configuration>
+				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-surefire-plugin</artifactId>
@@ -82,6 +98,18 @@
 					<version>0.8.8</version>
 					<configuration>
 						<output>file</output>
+						<excludes>
+							<exclude>ru/practicum/shareit/booking</exclude>
+							<exclude>rru/practicum/shareit/client</exclude>
+							<exclude>ru/practicum/shareit/item</exclude>
+							<exclude>ru/practicum/shareit/request</exclude>
+							<exclude>ru/practicum/shareit/user</exclude>
+							<exclude>ru/practicum/shareit/booking/ErrorResponse.class</exclude>
+							<exclude>ru/practicum/shareit/booking/WebRestControllerAdvice.class</exclude>
+							<exclude>ru/practicum/shareit/item/Comment.class</exclude>
+							<exclude>ru/practicum/shareit/item/ItemRequestNotFoundException.class</exclude>
+							<exclude>ru/practicum/shareit/item/ItemValidationException.class</exclude>
+						</excludes>
 					</configuration>
 					<executions>
 						<execution>
@@ -96,6 +124,19 @@
 								<goal>check</goal>
 							</goals>
 							<configuration>
+								<excludes>
+									<exclude>ru/practicum/shareit/booking</exclude>
+									<exclude>rru/practicum/shareit/client</exclude>
+									<exclude>ru/practicum/shareit/item</exclude>
+									<exclude>ru/practicum/shareit/request</exclude>
+									<exclude>ru/practicum/shareit/user</exclude>
+									<exclude>ru/practicum/shareit/booking/ErrorResponse.class</exclude>
+									<exclude>ru/practicum/shareit/booking/WebRestControllerAdvice.class</exclude>
+									<exclude>ru/practicum/shareit/item/Comment.class</exclude>
+									<exclude>ru/practicum/shareit/item/ItemRequestNotFoundException.class</exclude>
+									<exclude>ru/practicum/shareit/item/ItemValidationException.class</exclude>
+								</excludes>
+
 								<rules>
 									<rule>
 										<element>BUNDLE</element>
@@ -108,22 +149,22 @@
 											<limit>
 												<counter>LINE</counter>
 												<value>COVEREDRATIO</value>
-												<minimum>0.2</minimum>
+												<minimum>0.9</minimum>
 											</limit>
 											<limit>
 												<counter>BRANCH</counter>
 												<value>COVEREDRATIO</value>
-												<minimum>0.2</minimum>
+												<minimum>0.6</minimum>
 											</limit>
 											<limit>
 												<counter>COMPLEXITY</counter>
 												<value>COVEREDRATIO</value>
-												<minimum>0.2</minimum>
+												<minimum>0.6</minimum>
 											</limit>
 											<limit>
 												<counter>METHOD</counter>
 												<value>COVEREDRATIO</value>
-												<minimum>0.2</minimum>
+												<minimum>0.7</minimum>
 											</limit>
 											<limit>
 												<counter>CLASS</counter>
@@ -136,8 +177,8 @@
 							</configuration>
 						</execution>
 						<execution>
-							<id>jacoco-site</id>
-							<phase>install</phase>
+							<id>jacoco-report</id>
+							<phase>test</phase>
 							<goals>
 								<goal>report</goal>
 							</goals>
@@ -147,6 +188,7 @@
 			</plugins>
 		</pluginManagement>
 	</build>
+
 	<profiles>
 		<profile>
 			<id>check</id>
