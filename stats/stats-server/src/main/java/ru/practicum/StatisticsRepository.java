@@ -3,16 +3,12 @@ package ru.practicum;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import ru.practicum.model.Stat;
 
-import java.time.LocalDateTime;
-import java.util.Collection;
+import java.sql.Timestamp;
 import java.util.List;
 
 public interface StatisticsRepository extends PagingAndSortingRepository<Stat, Long> {
-    List<Stat> findAllByTimestampAfterAndTimestampBeforeAndUriInOrderById(LocalDateTime start, LocalDateTime end, String[] uris);
+    List<Stat> findAllByStampAfterAndStampBeforeOrderByStamp(Timestamp start, Timestamp end);
 
-    List<Stat> findAllByTimestampAfterAndTimestampBeforeOrderById(LocalDateTime start, LocalDateTime end);
+    List<Stat> findAllByStampAfterAndStampBeforeAndUriInOrderByStamp(Timestamp start, Timestamp end, List<String> uris);
 
-    List<Stat> findAllByTimestampAfterAndTimestampBeforeOrderByTimestamp(LocalDateTime start, LocalDateTime end);
-
-    List<Stat> findAllByTimestampAfterAndTimestampBeforeAndUriInOrderByTimestamp(LocalDateTime start, LocalDateTime end, List<String> uris);
 }

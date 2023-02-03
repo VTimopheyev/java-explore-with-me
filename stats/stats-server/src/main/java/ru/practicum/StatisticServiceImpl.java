@@ -7,9 +7,10 @@ import ru.practicum.dto.StatsDto;
 import ru.practicum.dto.StatsRecordDto;
 import ru.practicum.model.Stat;
 
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,14 +29,14 @@ public class StatisticServiceImpl implements StatisticService {
         stat.setApp(srDto.getApp());
         stat.setIp(srDto.getIp());
         stat.setUri(srDto.getUri());
-        stat.setTimestamp(srDto.getTimestamp());
+        stat.setStamp(srDto.getTimestamp());
 
         return statisticsMapper.toStatsDto(statisticsRepository.save(stat));
     }
 
     @Override
     public Collection<StatsDto> getStatistics(
-            LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
+            Timestamp start, Timestamp end, List<String> uris, Boolean unique) {
 
         if (uris.isEmpty() && !unique) {
             return cookStatisticsForAllUrisNotUniqueIp(start, end);
@@ -56,9 +57,9 @@ public class StatisticServiceImpl implements StatisticService {
     }
 
     private Collection<StatsDto> cookStatisticsForSelectedUrisAndUniqueIps(
-            LocalDateTime start, LocalDateTime end, List<String> uris) {
+            Timestamp start, Timestamp end, List<String> uris) {
         List<Stat> allStatistics = statisticsRepository
-                .findAllByTimestampAfterAndTimestampBeforeAndUriInOrderByTimestamp(start, end, uris);
+                .findAllByStampAfterAndStampBeforeAndUriInOrderByStamp(start, end, uris);
 
         List<List<Stat>> sortedByUri = new ArrayList<>();
 
@@ -81,13 +82,17 @@ public class StatisticServiceImpl implements StatisticService {
             dto.setHits(list.size());
             statsToSend.add(dto);
         }
-        return statsToSend;
+        return statsToSend
+                .stream()
+                .sorted(Comparator.comparingInt(StatsDto::getHits)
+                        .reversed())
+                .collect(Collectors.toList());
     }
 
     private Collection<StatsDto> cookStatisticsForSelectedUrisNotUniqueIp(
-            LocalDateTime start, LocalDateTime end, List<String> uris) {
+            Timestamp start, Timestamp end, List<String> uris) {
         List<Stat> allStatistics = statisticsRepository
-                .findAllByTimestampAfterAndTimestampBeforeAndUriInOrderByTimestamp(start, end, uris);
+                .findAllByStampAfterAndStampBeforeAndUriInOrderByStamp(start, end, uris);
 
         List<List<Stat>> sortedByUri = new ArrayList<>();
 
@@ -97,7 +102,9 @@ public class StatisticServiceImpl implements StatisticService {
                     .filter(s -> s.getUri().equals(uri))
                     .collect(Collectors.toList());
 
-            sortedByUri.add(oneUriStat);
+            if (!oneUriStat.isEmpty()) {
+                sortedByUri.add(oneUriStat);
+            }
         }
 
         List<StatsDto> statsToSend = new ArrayList<>();
@@ -110,13 +117,17 @@ public class StatisticServiceImpl implements StatisticService {
             statsToSend.add(dto);
         }
 
-        return statsToSend;
+        return statsToSend
+                .stream()
+                .sorted(Comparator.comparingInt(StatsDto::getHits)
+                        .reversed())
+                .collect(Collectors.toList());
     }
 
     private Collection<StatsDto> cookStatisticsForAllUrisUniqueIp(
-            LocalDateTime start, LocalDateTime end) {
+            Timestamp start, Timestamp end) {
         List<Stat> allStatistics = statisticsRepository
-                .findAllByTimestampAfterAndTimestampBeforeOrderByTimestamp(start, end);
+                .findAllByStampAfterAndStampBeforeOrderByStamp(start, end);
 
         List<String> allUris = getAllUris(allStatistics);
 
@@ -142,13 +153,17 @@ public class StatisticServiceImpl implements StatisticService {
             statsToSend.add(dto);
         }
 
-        return statsToSend;
+        return statsToSend
+                .stream()
+                .sorted(Comparator.comparingInt(StatsDto::getHits)
+                        .reversed())
+                .collect(Collectors.toList());
     }
 
     private Collection<StatsDto> cookStatisticsForAllUrisNotUniqueIp(
-            LocalDateTime start, LocalDateTime end) {
+            Timestamp start, Timestamp end) {
         List<Stat> allStatistics = statisticsRepository
-                .findAllByTimestampAfterAndTimestampBeforeOrderByTimestamp(start, end);
+                .findAllByStampAfterAndStampBeforeOrderByStamp(start, end);
 
         List<String> allUris = getAllUris(allStatistics);
 
@@ -173,7 +188,11 @@ public class StatisticServiceImpl implements StatisticService {
             statsToSend.add(dto);
         }
 
-        return statsToSend;
+        return statsToSend
+                .stream()
+                .sorted(Comparator.comparingInt(StatsDto::getHits)
+                        .reversed())
+                .collect(Collectors.toList());
     }
 
 

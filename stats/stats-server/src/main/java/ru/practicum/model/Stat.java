@@ -1,6 +1,5 @@
 package ru.practicum.model;
 
-import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,7 +7,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
 import javax.persistence.*;
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 import java.util.Objects;
 
 @Data
@@ -24,7 +23,7 @@ public class Stat {
     private String app;
     private String ip;
     private String uri;
-    private LocalDateTime timestamp;
+    private Timestamp stamp;
 
     @Override
     public boolean equals(Object o) {

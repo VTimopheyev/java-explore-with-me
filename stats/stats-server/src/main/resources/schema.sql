@@ -3,6 +3,6 @@ CREATE TABLE IF NOT EXISTS statistics (
   app VARCHAR(64) NOT NULL,
   ip VARCHAR(64) NOT NULL,
   uri VARCHAR(64) NOT NULL,
-  timestamp VARCHAR(512) NOT NULL,
+  stamp TIMESTAMP NOT NULL,
   CONSTRAINT pk_statistics PRIMARY KEY (id)
   );
