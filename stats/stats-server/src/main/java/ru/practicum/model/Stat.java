@@ -32,6 +32,11 @@ public class Stat {
         Stat stat = (Stat) o;
         return Objects.equals(ip, stat.ip) && Objects.equals(uri, stat.uri);
     }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, app, ip, uri, stamp);
+    }
 }
 
 
