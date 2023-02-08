@@ -21,16 +21,16 @@ public class ParticipationRequestController {
     private final ParticipationRequestServiceImpl participationRequestService;
 
     @PostMapping
-    public ParticipationRequestDto createNewRequest(@NotNull @PathVariable int userId,
-                                                    @NotNull @RequestParam int eventId) {
+    public ParticipationRequestDto createNewRequest(@NotNull @PathVariable long userId,
+                                                    @NotNull @RequestParam long eventId) {
         log.info("Creating new participation request");
         return participationRequestService.createNewRequest(userId, eventId);
     }
 
     @PatchMapping(path = "{requestId}/cancel")
-    public EventDto cancelParticipationRequest(
-            @NotNull @PathVariable int userId,
-            @NotNull @PathVariable int requestId
+    public ParticipationRequestDto cancelParticipationRequest(
+            @NotNull @PathVariable long userId,
+            @NotNull @PathVariable long requestId
     ) {
         log.info("Canceling of participation request");
         return participationRequestService.cancelParticipationRequest(
@@ -39,7 +39,7 @@ public class ParticipationRequestController {
 
     @GetMapping
     public Collection<ParticipationRequestDto> getParticipationRequests(
-            @NotNull @PathVariable int userId
+            @NotNull @PathVariable long userId
     ) {
         log.info("Viewing event by some user");
         return participationRequestService.getParticipationRequests(userId);

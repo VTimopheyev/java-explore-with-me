@@ -1,8 +1,6 @@
 package ru.practicum.model;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
@@ -10,14 +8,18 @@ import javax.validation.constraints.NotNull;
 
 @Data
 @Entity
-@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"name"}), name = "categories")
-@NoArgsConstructor
+@Table(name = "users")
 @EqualsAndHashCode
-public class Category {
+@NoArgsConstructor
+@AllArgsConstructor
+public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
     @NotNull
     @NotEmpty
     private String name;
+    @NotNull
+    @NotEmpty
+    private String email;
 }

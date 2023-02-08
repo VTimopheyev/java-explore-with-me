@@ -28,13 +28,13 @@ public class CategoryController {
     @PatchMapping(path = "/admin/categories/{catId}")
     public Category updateCategoryByAdmin(
             @NotNull @RequestBody @Valid Category category,
-            @NotNull @PathVariable int catId) {
+            @NotNull @PathVariable long catId) {
         log.info("Updating event by initiator");
-        return categoryService.updateCategoryByAdmin(catId);
+        return categoryService.updateCategoryByAdmin(catId, category);
     }
 
     @DeleteMapping("/admin/categories/{catId}")
-    public Category deleteCategory(@NotNull @PathVariable int catId) {
+    public Category deleteCategory(@NotNull @PathVariable long catId) {
         log.info("Deleting category by admin");
         return categoryService.deleteCategory(catId);
     }
@@ -48,7 +48,7 @@ public class CategoryController {
     }
 
     @GetMapping(path = "/categories/{catId}")
-    public Category viewParticularCategoryByAnyUser(@NotNull @PathVariable int catId) {
+    public Category viewParticularCategoryByAnyUser(@NotNull @PathVariable long catId) {
         log.info("Viewing category by some user");
         return categoryService.viewParticularCategoryByAnyUser(catId);
     }
