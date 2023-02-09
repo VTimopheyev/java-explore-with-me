@@ -1,6 +1,5 @@
 package ru.practicum.mappers;
 
-import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -10,7 +9,6 @@ import ru.practicum.model.Event;
 
 @Component
 @NoArgsConstructor
-@AllArgsConstructor
 @Slf4j
 public class EventMapper {
 

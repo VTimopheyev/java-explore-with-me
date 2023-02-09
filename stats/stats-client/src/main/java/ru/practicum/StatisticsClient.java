@@ -23,7 +23,7 @@ public class StatisticsClient {
         return makeAndSendRequest(HttpMethod.GET, path, parameters, null);
     }
 
-    protected <T> ResponseEntity<Object> post(String path, T body) {
+    public <T> ResponseEntity<Object> post(String path, T body) {
         return makeAndSendRequest(HttpMethod.POST, path, null, body);
     }
 

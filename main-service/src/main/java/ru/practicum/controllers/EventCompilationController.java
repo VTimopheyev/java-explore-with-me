@@ -4,7 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.dto.EventCompilationDisplayDto;
 import ru.practicum.dto.EventCompilationDto;
+import ru.practicum.model.EventCompilation;
 import ru.practicum.service.EventCompilationServiceImpl;
 
 import javax.validation.Valid;
@@ -20,16 +22,16 @@ public class EventCompilationController {
     private final EventCompilationServiceImpl eventCompilationService;
 
     @PostMapping(path = "/admin/compilations")
-    public EventCompilationDto createNewEventCompilation(
+    public EventCompilationDisplayDto createNewEventCompilation(
             @NotNull @RequestBody @Valid EventCompilationDto eventCompilationDto) {
         log.info("Creating new event compilation by admin");
         return eventCompilationService.createNewEventCompilation(eventCompilationDto);
     }
 
     @PatchMapping(path = "/admin/compilations/{compId}")
-    public EventCompilationDto updateEventCompilationByAdmin(
+    public EventCompilationDisplayDto updateEventCompilationByAdmin(
             @NotNull @RequestBody EventCompilationDto eventCompilationDto,
-            @NotNull @PathVariable int compId
+            @NotNull @PathVariable long compId
     ) {
         log.info("Updating event compilation by admin");
         return eventCompilationService.updateEventCompilationByAdmin(
@@ -37,13 +39,13 @@ public class EventCompilationController {
     }
 
     @DeleteMapping("/admin/compilations/{compId}")
-    public EventCompilationDto deleteEventCompilation(@NotNull @PathVariable int compId) {
+    public EventCompilation deleteEventCompilation(@NotNull @PathVariable long compId) {
         log.info("Deleting event compilation");
         return eventCompilationService.deleteEventCompilation(compId);
     }
 
     @GetMapping("/compilations")
-    public Collection<EventCompilationDto> getCompilationsByAnyUser(
+    public Collection<EventCompilationDisplayDto> getCompilationsByAnyUser(
             @RequestParam(name = "pinned", required = false) boolean pinned,
             @RequestParam(name = "from", required = false, defaultValue = "0") int from,
             @RequestParam(name = "size", required = false, defaultValue = "10") int size
@@ -53,10 +55,10 @@ public class EventCompilationController {
     }
 
     @GetMapping(path = "/compilations/{compId}")
-    public EventCompilationDto getParticularCompilationByAnyUser(
-            @NotNull @PathVariable int compId
+    public EventCompilationDisplayDto getParticularCompilationByAnyUser(
+            @NotNull @PathVariable long compId
     ) {
         log.info("Viewing event by some user");
-        return eventCompilationService.getParticularCompilationByAnyUser(eventCompId);
+        return eventCompilationService.getParticularCompilationByAnyUser(compId);
     }
 }

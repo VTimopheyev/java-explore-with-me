@@ -6,16 +6,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import ru.practicum.StatisticsClient;
 import ru.practicum.dto.*;
-import ru.practicum.exceptions.CategoryNotFoundException;
-import ru.practicum.exceptions.EventNotFoundException;
-import ru.practicum.exceptions.UserNotFoundException;
+import ru.practicum.exceptions.*;
 import ru.practicum.mappers.EventMapper;
 import ru.practicum.mappers.ParticipationRequestMapper;
 import ru.practicum.mappers.UserMapper;
-import ru.practicum.model.Category;
-import ru.practicum.model.Event;
-import ru.practicum.model.Location;
-import ru.practicum.model.User;
+import ru.practicum.model.*;
 import ru.practicum.repositories.*;
 import ru.practicum.status.EventStatus;
 
@@ -27,6 +22,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static ru.practicum.status.EventStatus.PENDING;
+import static ru.practicum.status.EventStatus.PUBLISHED;
+import static ru.practicum.status.ParticipationRequestStatus.CANCELLED;
 import static ru.practicum.status.ParticipationRequestStatus.CONFIRMED;
 
 @Service
@@ -100,11 +97,11 @@ public class EventServiceImpl implements EventService {
                 .collect(Collectors.toList());
     }
 
-    private int getConfirmedRequests(Event e) {
+    int getConfirmedRequests(Event e) {
         return participationRequestRepository.countByEventEqualsAndStatusEquals(e, CONFIRMED);
     }
 
-    private int getViewsOFEvent(Event e) {
+    int getViewsOFEvent(Event e) {
         Timestamp ts = Timestamp.valueOf(e.getCreatedOn());
         Timestamp ts1 = Timestamp.valueOf(LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()));
         String path = "/events/" + e.getId();
@@ -170,6 +167,232 @@ public class EventServiceImpl implements EventService {
                         .reversed())
                 .collect(Collectors.toList());
 
+    }
+
+
+    public Collection<EventFullDto> searchEventsByAnyUser(
+            String text, List<Long> categoryIds, boolean paid, Timestamp start, Timestamp end,
+            boolean onlyAvailable, String sort, int from, int size) {
+
+        List<Event> foundEvents;
+        LocalDateTime now = LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault());
+        PageRequest pr = PageRequest.of((from / size), size);
+
+        if (!Objects.isNull(text)) {
+            foundEvents = eventRepository.findByStateEqualsAndAnnotationContainingOrDescriptionContainingIgnoreCase(
+                    PUBLISHED, text, text, pr);
+        } else {
+            foundEvents = eventRepository.findByStateEquals(PUBLISHED, pr);
+        }
+
+        if (Objects.isNull(start)) {
+            foundEvents = foundEvents
+                    .stream()
+                    .filter(event -> event.getEventDate().isAfter(now))
+                    .collect(Collectors.toList());
+        } else {
+            foundEvents = foundEvents
+                    .stream()
+                    .filter(event -> event.getEventDate().isAfter(start.toLocalDateTime()))
+                    .collect(Collectors.toList());
+        }
+
+        if (!categoryIds.isEmpty()) {
+            foundEvents = foundEvents
+                    .stream()
+                    .filter(event -> categoryIds.contains(event.getCategory()))
+                    .collect(Collectors.toList());
+        }
+
+        if (!Objects.isNull(paid)) {
+            foundEvents = foundEvents
+                    .stream()
+                    .filter(event -> event.isPaid() == paid)
+                    .collect(Collectors.toList());
+        }
+
+        if (!Objects.isNull(onlyAvailable)) {
+            foundEvents = foundEvents
+                    .stream()
+                    .filter(event -> event.getParticipantLimit() >
+                            participationRequestRepository.countByEventEqualsAndStatusEquals(event, CONFIRMED))
+                    .collect(Collectors.toList());
+        }
+
+        if (!Objects.isNull(sort)) {
+            if (sort.equals("EVENT_DATE")) {
+                foundEvents = foundEvents
+                        .stream()
+                        .sorted(Comparator.comparing(Event::getEventDate))
+                        .collect(Collectors.toList());
+            } else if (sort.equals("VIEWS")) {
+                foundEvents = foundEvents
+                        .stream()
+                        .sorted(Comparator.comparingInt(this::getViewsOFEvent))
+                        .collect(Collectors.toList());
+            }
+        }
+
+
+        return foundEvents
+                .stream()
+                .map(e -> eventMapper.toFullDto(e, getConfirmedRequests(e),
+                        userMapper.toUserDto(e.getInitiator()),
+                        getViewsOFEvent(e)))
+                .collect(Collectors.toList());
+
+    }
+
+    public EventFullDto viewParticularEventByAnyUser(long eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(EventNotFoundException::new);
+
+        if (!event.getState().equals(PUBLISHED)) {
+            throw new EventNotFoundException();
+        }
+
+        return eventMapper.toFullDto(
+                event,
+                getConfirmedRequests(event),
+                userMapper.toUserDto(userRepository.findById(event.getId()).get()),
+                getViewsOFEvent(event));
+    }
+
+
+    public EventFullDto updateEventByInitiator(long userId, long eventId, EventDto eventDto) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(EventNotFoundException::new);
+
+        if (!event.getState().equals(PENDING) || !event.getState().equals(CANCELLED)) {
+            throw new EventInvalidStatusException();
+        }
+
+        if (eventDto.getEventDate().isBefore(
+                LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()).plusHours(2L))) {
+            throw new EventInvalidEventDateException();
+        }
+
+        event.setAnnotation(eventDto.getAnnotation());
+
+        event.setCategory(categoryRepository.findById(eventDto.getCategory())
+                .orElseThrow(CategoryNotFoundException::new));
+
+        event.setInitiator(userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new));
+
+        event.setEventDate(eventDto.getEventDate());
+
+        event.setDescription(eventDto.getDescription());
+
+        Location location = new Location();
+        location.setLongitude(eventDto.getLocation().getLongitude());
+        location.setLatitude(eventDto.getLocation().getLatitude());
+        event.setLocation(locationRepository.save(location));
+
+        event.setPaid(eventDto.isPaid());
+
+        event.setTitle(eventDto.getTitle());
+
+        event.setRequestModeration(eventDto.isRequestModeration());
+
+        if (!Objects.isNull(eventDto.getParticipantLimit())) {
+            event.setParticipantLimit(eventDto.getParticipantLimit());
+        }
+
+        event.setState(eventDto.getState());
+
+        return eventMapper.toFullDto(eventRepository.save(event),
+                getConfirmedRequests(event),
+                userMapper.toUserDto(event.getInitiator()),
+                getViewsOFEvent(event));
+    }
+
+
+    public EventStatusResponseDto updateEventByUpdateEventParticipationRequestsStatusByInitiatorInitiator(
+            long userId, long eventId, EventStatusDto eventStatusDto) {
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(EventNotFoundException::new);
+
+        userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+
+        if (getConfirmedRequests(event) == eventRepository.findById(eventId).get().getParticipantLimit() ||
+                !event.isRequestModeration() || event.getParticipantLimit() == 0) {
+            throw new ParticipationLimitException();
+        }
+
+        List<Long> requestsIds = eventStatusDto.getIds();
+
+        List<ParticipationRequestDto> confirmedRequests = new ArrayList<>();
+        List<ParticipationRequestDto> rejectedRequests = new ArrayList<>();
+
+        for (long reqId : requestsIds) {
+            ParticipationRequest pr = participationRequestRepository.findById(reqId).get();
+            if (getConfirmedRequests(event) < event.getParticipantLimit()) {
+                pr.setStatus(CONFIRMED);
+                confirmedRequests.add(participationRequestMapper.toDto(participationRequestRepository.save(pr)));
+            } else {
+                pr.setStatus(CANCELLED);
+                rejectedRequests.add(participationRequestMapper.toDto(participationRequestRepository.save(pr)));
+            }
+        }
+        return new EventStatusResponseDto(confirmedRequests, rejectedRequests);
+    }
+
+
+    public EventFullDto updateEventByAdmin(long eventId, EventDto eventDto) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(EventNotFoundException::new);
+
+        if (eventDto.getEventDate().isBefore(
+                LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()).plusHours(1L))) {
+            throw new EventInvalidEventDateException();
+        }
+
+        if (eventDto.getStateAction().equals("PUBLISH_EVENT") && !event.getState().equals(PENDING)) {
+            throw new EventInvalidStatusException();
+        }else if(eventDto.getStateAction().equals("PUBLISH_EVENT")){
+            event.setState(PUBLISHED);
+        }
+
+        if (eventDto.getStateAction().equals("CANCEL_EVENT") && !event.getState().equals(PENDING)) {
+            throw new EventInvalidStatusException();
+        }else if(eventDto.getStateAction().equals("CANCEL_EVENT")){
+            event.setState(EventStatus.CANCELLED);
+        }
+
+        event.setAnnotation(eventDto.getAnnotation());
+
+        event.setCategory(categoryRepository.findById(eventDto.getCategory())
+                .orElseThrow(CategoryNotFoundException::new));
+
+        event.setEventDate(eventDto.getEventDate());
+
+        event.setDescription(eventDto.getDescription());
+
+        Location location = new Location();
+        location.setLongitude(eventDto.getLocation().getLongitude());
+        location.setLatitude(eventDto.getLocation().getLatitude());
+        event.setLocation(locationRepository.save(location));
+
+        event.setPaid(eventDto.isPaid());
+
+        event.setTitle(eventDto.getTitle());
+
+        event.setRequestModeration(eventDto.isRequestModeration());
+
+        if (!Objects.isNull(eventDto.getParticipantLimit())) {
+            event.setParticipantLimit(eventDto.getParticipantLimit());
+        }
+
+        event.setState(eventDto.getState());
+
+        return eventMapper.toFullDto(eventRepository.save(event),
+                getConfirmedRequests(event),
+                userMapper.toUserDto(event.getInitiator()),
+                getViewsOFEvent(event));
     }
 
 

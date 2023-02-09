@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ru.practicum.status.EventStatus;
 
 import javax.validation.constraints.Future;
 import javax.validation.constraints.NotNull;
@@ -29,4 +30,6 @@ public class EventDto {
     private long participantLimit;
     private boolean requestModeration;
     private String title;
+    private EventStatus state;
+    private String stateAction;
 }
