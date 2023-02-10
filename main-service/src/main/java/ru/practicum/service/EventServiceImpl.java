@@ -87,8 +87,9 @@ public class EventServiceImpl implements EventService {
         PageRequest pr = PageRequest.of((from / size), size);
 
         return eventRepository
-                .findByInitiatorEquals(user, pr)
+                .findAllByIdNot(0L, pr)
                 .stream()
+                .filter(e ->e.getInitiator().equals(user))
                 .map(e -> eventMapper.toFullDto(e, getConfirmedRequests(e),
                         userMapper.toUserDto(user),
                         getViewsOFEvent(e)))
@@ -98,7 +99,7 @@ public class EventServiceImpl implements EventService {
     }
 
     int getConfirmedRequests(Event e) {
-        return participationRequestRepository.countByEventEqualsAndStatusEquals(e, CONFIRMED);
+        return participationRequestRepository.countRequestsWithStatus(e.getId(), CONFIRMED);
     }
 
     int getViewsOFEvent(Event e) {
@@ -137,8 +138,9 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(EventNotFoundException::new);
 
-        return participationRequestRepository.findByEventEquals(event)
+        return participationRequestRepository.findAll()
                 .stream()
+                .filter(p -> p.getEvent().equals(event))
                 .map(participationRequestMapper::toDto)
                 .collect(Collectors.toList());
     }
@@ -150,16 +152,12 @@ public class EventServiceImpl implements EventService {
                 .map(EventStatus::valueOf)
                 .collect(Collectors.toList());
 
-        List<Category> categories = categoryIds
-                .stream()
-                .map(i -> categoryRepository.findById(i).get())
-                .collect(Collectors.toList());
-
         PageRequest pr = PageRequest.of((from / size), size);
 
         return eventRepository
-                .findByIdInAndStateInAndCategoryInAndStartAfterAndEndBefore(ids, status, categories, start, end, pr)
+                .findByIdInAndStateInAndEventDateAfterAndEventDateBefore(ids, status, start, end, pr)
                 .stream()
+                .filter(e -> categoryIds.contains(e.getCategory().getId()))
                 .map(e -> eventMapper.toFullDto(e, getConfirmedRequests(e),
                         userMapper.toUserDto(e.getInitiator()),
                         getViewsOFEvent(e)))
@@ -204,18 +202,18 @@ public class EventServiceImpl implements EventService {
                     .collect(Collectors.toList());
         }
 
-        if (!Objects.isNull(paid)) {
+        if (!Objects.isNull(paid) || !paid) {
             foundEvents = foundEvents
                     .stream()
                     .filter(event -> event.isPaid() == paid)
                     .collect(Collectors.toList());
         }
 
-        if (!Objects.isNull(onlyAvailable)) {
+        if (!Objects.isNull(onlyAvailable) && onlyAvailable) {
             foundEvents = foundEvents
                     .stream()
                     .filter(event -> event.getParticipantLimit() >
-                            participationRequestRepository.countByEventEqualsAndStatusEquals(event, CONFIRMED))
+                            participationRequestRepository.countRequestsWithStatus(event.getId(), CONFIRMED))
                     .collect(Collectors.toList());
         }
 

@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
+@Table(name = "requests")
 @NoArgsConstructor
 @EqualsAndHashCode
 public class ParticipationRequest {
@@ -17,7 +18,9 @@ public class ParticipationRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
     @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
     private ParticipationRequestStatus status;
+    @Column(name = "created", nullable = false)
     private LocalDateTime created;
     @ManyToOne
     @JoinColumn(name = "event_id")

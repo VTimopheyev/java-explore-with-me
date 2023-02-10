@@ -10,6 +10,7 @@ import ru.practicum.service.CategoryServiceImpl;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.Collection;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -40,7 +41,7 @@ public class CategoryController {
     }
 
     @GetMapping(path = "/categories")
-    public Collection<Category> getCategoriesByAnyUser(
+    public List<Category> getCategoriesByAnyUser(
             @RequestParam(name = "from", required = false, defaultValue = "0") int from,
             @RequestParam(name = "size", required = false, defaultValue = "10") int size) {
         log.info("Getting all categories by any user");

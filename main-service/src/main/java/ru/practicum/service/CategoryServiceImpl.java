@@ -8,7 +8,7 @@ import ru.practicum.exceptions.CategoryNotFoundException;
 import ru.practicum.model.Category;
 import ru.practicum.repositories.CategoryRepository;
 
-import java.util.Collection;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -38,10 +38,9 @@ public class CategoryServiceImpl implements CategoryService {
         return category;
     }
 
-    public Collection<Category> getCategoriesByAnyUser(int from, int size) {
+    public List<Category> getCategoriesByAnyUser(int from, int size) {
         PageRequest pr = PageRequest.of((from / size), size);
-
-        return categoryRepository.findAllOrderById(pr);
+        return categoryRepository.findByIdNot(0L, pr);
     }
 
     public Category viewParticularCategoryByAnyUser(long catId) {

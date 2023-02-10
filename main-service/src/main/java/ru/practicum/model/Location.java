@@ -6,13 +6,13 @@ import javax.persistence.*;
 
 @Data
 @Entity
+@Table(name = "locations")
 @EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
 public class Location {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-
     private long id;
     private float longitude;
     private float latitude;

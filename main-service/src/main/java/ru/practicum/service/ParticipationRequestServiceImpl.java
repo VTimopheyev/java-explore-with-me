@@ -19,7 +19,7 @@ import ru.practicum.status.ParticipationRequestStatus;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -62,13 +62,14 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         return mapper.toDto(participationRequestRepository.save(partReq));
     }
 
-    public Collection<ParticipationRequestDto> getParticipationRequests(long userId) {
-        User initiator = userRepository.findById(userId)
+    public List<ParticipationRequestDto> getParticipationRequests(long userId) {
+        User requester = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
         return participationRequestRepository
-                .findByInitiatorEquals(initiator)
+                .findAllByIdNot(0L)
                 .stream()
+                .filter(p -> p.getRequester().equals(requester))
                 .map(mapper::toDto)
                 .collect(Collectors.toList());
     }

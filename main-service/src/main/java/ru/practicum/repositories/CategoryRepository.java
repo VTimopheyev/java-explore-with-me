@@ -4,8 +4,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import ru.practicum.model.Category;
 
-import java.util.Collection;
+import java.util.List;
 
 public interface CategoryRepository extends PagingAndSortingRepository<Category, Long> {
-    Collection<Category> findAllOrderById(PageRequest pr);
+    List<Category> findByIdNot(long l, PageRequest pr);
 }

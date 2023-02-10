@@ -1,7 +1,6 @@
 package ru.practicum.model;
 
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import ru.practicum.status.EventStatus;
 
@@ -11,8 +10,8 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
+@Table(name = "events")
 @NoArgsConstructor
-@EqualsAndHashCode
 public class Event {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

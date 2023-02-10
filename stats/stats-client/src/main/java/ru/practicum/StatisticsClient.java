@@ -3,21 +3,22 @@ package ru.practicum;
 import java.util.List;
 import java.util.Map;
 
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
+@Component
+@AllArgsConstructor
 public class StatisticsClient {
-    protected final RestTemplate rest;
 
-    public StatisticsClient(RestTemplate rest) {
-        this.rest = rest;
-    }
+    private RestTemplate rest;
 
     public ResponseEntity<Object> get(String path, Map<String, Object> parameters) {
         return makeAndSendRequest(HttpMethod.GET, path, parameters, null);

@@ -1,18 +1,19 @@
 package ru.practicum.repositories;
 
+import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
-import ru.practicum.dto.EventRequestDto;
-import ru.practicum.model.Event;
 import ru.practicum.model.ParticipationRequest;
-import ru.practicum.model.User;
 import ru.practicum.status.ParticipationRequestStatus;
 
 import java.util.Collection;
 
 public interface ParticipationRequestRepository extends PagingAndSortingRepository<ParticipationRequest, Long> {
-    Collection<ParticipationRequest> findByInitiatorEquals(User initiator);
+    Collection<ParticipationRequest> findAllByIdNot(long l);
 
-    int countByEventEqualsAndStatusEquals(Event e, ParticipationRequestStatus status);
+    Collection<ParticipationRequest> findAll();
 
-    Collection<ParticipationRequest> findByEventEquals(Event event);
+    @Query(" select count(p) " +
+            "from ParticipationRequest p " +
+            "where p.event.id = ?1 and p.status = ?2 ")
+    int countRequestsWithStatus(long eventId, ParticipationRequestStatus status);
 }
