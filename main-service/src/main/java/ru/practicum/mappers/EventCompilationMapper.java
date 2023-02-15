@@ -17,7 +17,7 @@ import java.util.List;
 public class EventCompilationMapper {
 
     public EventCompilationDisplayDto toFullDto(EventCompilation ec, List<EventFullDto> events){
-        return new EventCompilationDisplayDto(events, ec.isPinned(), ec.getTitle());
+        return new EventCompilationDisplayDto(ec.getId(), events, ec.isPinned(), ec.getTitle());
     }
 
 }

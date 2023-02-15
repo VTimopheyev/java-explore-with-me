@@ -2,10 +2,13 @@ package ru.practicum.mappers;
 
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import ru.practicum.dto.EventFullDto;
 import ru.practicum.dto.UserDto;
 import ru.practicum.model.Event;
+
+import java.sql.Timestamp;
 
 @Component
 @NoArgsConstructor
@@ -21,9 +24,9 @@ public class EventMapper {
                 event.getAnnotation(),
                 event.getCategory(),
                 confirmedRequests,
-                event.getCreatedOn(),
+                Timestamp.valueOf(event.getCreatedOn()),
                 event.getDescription(),
-                event.getEventDate(),
+                Timestamp.valueOf(event.getEventDate()),
                 initiator,
                 event.getLocation(),
                 event.isPaid(),
@@ -35,5 +38,4 @@ public class EventMapper {
                 views
         );
     }
-
 }

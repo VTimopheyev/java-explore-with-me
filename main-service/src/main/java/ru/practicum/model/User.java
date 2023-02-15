@@ -10,16 +10,20 @@ import javax.validation.constraints.NotNull;
 @Entity
 @Table(name = "users")
 @EqualsAndHashCode
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
-    @Id
+    @javax.persistence.Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    @org.springframework.data.annotation.Id
+    private Long id;
     @NotNull
     @NotEmpty
+    @Column(name = "name")
     private String name;
     @NotNull
     @NotEmpty
+    @Column(name = "email")
     private String email;
 }

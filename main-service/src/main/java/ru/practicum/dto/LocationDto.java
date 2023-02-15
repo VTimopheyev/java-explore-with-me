@@ -10,10 +10,9 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @EqualsAndHashCode
 public class LocationDto {
-    private long id;
     @NotNull
-    private float longitude;
+    private float lon;
     @NotNull
-    private float latitude;
+    private float lat;
 }
 

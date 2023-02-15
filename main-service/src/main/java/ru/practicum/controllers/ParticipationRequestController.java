@@ -2,9 +2,9 @@ package ru.practicum.controllers;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.dto.EventDto;
 import ru.practicum.dto.ParticipationRequestDto;
 import ru.practicum.service.ParticipationRequestServiceImpl;
 
@@ -21,9 +21,11 @@ public class ParticipationRequestController {
     private final ParticipationRequestServiceImpl participationRequestService;
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public ParticipationRequestDto createNewRequest(@NotNull @PathVariable long userId,
                                                     @NotNull @RequestParam long eventId) {
         log.info("Creating new participation request");
+        System.out.println(userId +" "+eventId);
         return participationRequestService.createNewRequest(userId, eventId);
     }
 

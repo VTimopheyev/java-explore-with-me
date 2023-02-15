@@ -34,20 +34,27 @@ public class EventCompilationServiceImpl implements EventCompilationService {
     public EventCompilationDisplayDto createNewEventCompilation(EventCompilationDto eventCompilationDto) {
         String eventIds = eventCompilationDto.getEvents().stream().map(Object::toString)
                 .collect(Collectors.joining(", "));
+        log.info("Saving IDs as string for entity " + eventIds);
+
 
         EventCompilation eventCompilation = new EventCompilation();
         eventCompilation.setEventIds(eventIds);
         eventCompilation.setPinned(eventCompilationDto.isPinned());
         eventCompilation.setTitle(eventCompilationDto.getTitle());
+        log.info("Creating eventComp entity " + eventCompilation);
 
-        List<EventFullDto> events = eventRepository.findByIdIn(eventCompilationDto.getEvents())
+
+        List<EventFullDto> events = eventRepository.findAllByIdIn(eventCompilationDto.getEvents())
                 .stream()
                 .map(e -> eventMapper.toFullDto(e, eventService.getConfirmedRequests(e),
                         userMapper.toUserDto(e.getInitiator()),
                         eventService.getViewsOFEvent(e)))
                 .collect(Collectors.toList());
 
-        return eventCompilationMapper.toFullDto(eventCompilationRepository.save(eventCompilation), events);
+        EventCompilation ec = eventCompilationRepository.saveAndFlush(eventCompilation);
+        log.info("Saved entity: " + ec);
+
+        return eventCompilationMapper.toFullDto(ec, events);
     }
 
     public EventCompilationDisplayDto updateEventCompilationByAdmin(EventCompilationDto eventCompilationDto, long compId) {
@@ -57,24 +64,24 @@ public class EventCompilationServiceImpl implements EventCompilationService {
 
         List<EventFullDto> events = new ArrayList<>();
 
-        if (!eventCompilationDto.getEvents().isEmpty()){
+        if (!eventCompilationDto.getEvents().isEmpty()) {
             String eventIds = eventCompilationDto.getEvents().stream().map(Object::toString)
                     .collect(Collectors.joining(", "));
 
             evComp.setEventIds(eventIds);
-            events = eventRepository.findByIdIn(eventCompilationDto.getEvents())
+            events = eventRepository.findAllByIdIn(eventCompilationDto.getEvents())
                     .stream()
                     .map(e -> eventMapper.toFullDto(e, eventService.getConfirmedRequests(e),
                             userMapper.toUserDto(e.getInitiator()),
                             eventService.getViewsOFEvent(e)))
                     .collect(Collectors.toList());
-        }else{
+        } else {
             List<Long> ids = new ArrayList<>();
             String[] idsAsArray = evComp.getEventIds().split(",");
-            for (String s : idsAsArray){
+            for (String s : idsAsArray) {
                 ids.add(Long.parseLong(s));
             }
-            events = eventRepository.findByIdIn(ids)
+            events = eventRepository.findAllByIdIn(ids)
                     .stream()
                     .map(e -> eventMapper.toFullDto(e, eventService.getConfirmedRequests(e),
                             userMapper.toUserDto(e.getInitiator()),
@@ -99,21 +106,31 @@ public class EventCompilationServiceImpl implements EventCompilationService {
     public Collection<EventCompilationDisplayDto> getCompilationsByAnyUser(boolean pinned, int from, int size) {
         PageRequest pr = PageRequest.of((from / size), size);
 
-       return eventCompilationRepository.findByPinnedEquals(pinned, pr)
+        return eventCompilationRepository.findByPinnedEquals(pinned, pr)
                 .stream()
-                .filter(e -> e.isPinned() == pinned)
                 .map(e -> eventCompilationMapper.toFullDto(e,
                         convertStringToFullEventDto(e.getEventIds())))
                 .collect(Collectors.toList());
     }
 
-    private List<EventFullDto> convertStringToFullEventDto(String eventsId){
+    private List<EventFullDto> convertStringToFullEventDto(String eventsId) {
+        log.info("Got string to parse to Long:" + eventsId);
         List<Long> ids = new ArrayList<>();
-        String[] idsAsArray = eventsId.split(",");
-        for (String s : idsAsArray){
-            ids.add(Long.parseLong(s));
+
+        if (eventsId.length() == 1) {
+            Long idAsLong = Long.parseLong(eventsId);
+            ids.add(idAsLong);
+        } else if (eventsId.length() > 1) {
+            String[] idsAsArray = eventsId.split(", ");
+            log.info("Parsing String with IDs:" + idsAsArray);
+            for (String s : idsAsArray) {
+                ids.add(Long.parseLong(s));
+            }
         }
-        return eventRepository.findByIdIn(ids)
+
+        log.info("Creating list with IDs:" + ids);
+
+        return eventRepository.findAllByIdIn(ids)
                 .stream()
                 .map(e -> eventMapper.toFullDto(e, eventService.getConfirmedRequests(e),
                         userMapper.toUserDto(e.getInitiator()),

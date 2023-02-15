@@ -3,8 +3,6 @@ package ru.practicum.model;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Table;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
@@ -16,8 +14,9 @@ import java.util.Objects;
 @Table(name = "statistics")
 @NoArgsConstructor
 public class Stat {
-    @Id
+    @javax.persistence.Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @org.springframework.data.annotation.Id
     private long id;
 
     private String app;

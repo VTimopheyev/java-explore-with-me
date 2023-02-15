@@ -1,23 +1,25 @@
 package ru.practicum.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 
 @Data
 @Entity
 @Table(name = "compilations")
+@Builder
 @EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
 public class EventCompilation {
-    @Id
+    @javax.persistence.Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    @org.springframework.data.annotation.Id
+    private Long id;
+    @Column(name = "event_ids")
     private String eventIds;
+    @Column(name = "pinned")
     private boolean pinned;
+    @Column(name = "title")
     private String title;
 }

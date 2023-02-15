@@ -1,23 +1,24 @@
 package ru.practicum.model;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-
 @Data
 @Entity
-@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"name"}), name = "categories")
+@Table(name = "categories")
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode
 public class Category {
-    @Id
+    @javax.persistence.Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    @org.springframework.data.annotation.Id
+    private Long id;
     @NotNull
     @NotEmpty
+    @Column(name = "name")
     private String name;
 }

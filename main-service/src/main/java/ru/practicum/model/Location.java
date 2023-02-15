@@ -7,13 +7,17 @@ import javax.persistence.*;
 @Data
 @Entity
 @Table(name = "locations")
+@Builder
 @EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
 public class Location {
-    @Id
+    @javax.persistence.Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
-    private float longitude;
-    private float latitude;
+    @org.springframework.data.annotation.Id
+    private Long id;
+    @Column(name = "lon")
+    private Float lon;
+    @Column(name = "lat")
+    private Float lat;
 }

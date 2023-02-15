@@ -2,6 +2,7 @@ package ru.practicum.controllers;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.StatisticsClient;
@@ -27,9 +28,11 @@ public class EventController {
     private final StatisticsClient statisticsClient;
 
     @PostMapping(path = "/users/{userId}/events")
+    @ResponseStatus(HttpStatus.CREATED)
     public EventFullDto createNewEvent(@NotNull @RequestBody @Valid EventDto eventDto,
                                        @NotNull @PathVariable long userId) {
-        log.info("Creating new user");
+        log.info("Creating new event");
+        System.out.println(eventDto);
         return eventService.createNewEvent(eventDto, userId);
     }
 
@@ -124,6 +127,7 @@ public class EventController {
             @NotNull @PathVariable long userId,
             @NotNull @PathVariable long eventId
     ) {
+        System.out.println(eventStatusDto);
         log.info("Updating event by initiator");
         return eventService.updateEventByUpdateEventParticipationRequestsStatusByInitiatorInitiator(
                 userId, eventId, eventStatusDto);
@@ -131,8 +135,8 @@ public class EventController {
 
     @PatchMapping(path = "/admin/events/{eventId}")
     public EventFullDto updateEventByAdmin(
-            @NotNull @RequestBody EventDto eventDto,
-            @NotNull @PathVariable long eventId
+             @RequestBody EventDto eventDto,
+             @PathVariable long eventId
     ) {
         log.info("Updating event by admin");
         return eventService.updateEventByAdmin(eventId, eventDto);

@@ -1,8 +1,6 @@
 package ru.practicum.model;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import ru.practicum.status.ParticipationRequestStatus;
 
 import javax.persistence.*;
@@ -12,11 +10,14 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "requests")
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @EqualsAndHashCode
 public class ParticipationRequest {
-    @Id
+    @javax.persistence.Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    @org.springframework.data.annotation.Id
+    private Long id;
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private ParticipationRequestStatus status;

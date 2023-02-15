@@ -2,6 +2,7 @@ package ru.practicum.controllers;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.model.Category;
@@ -9,7 +10,6 @@ import ru.practicum.service.CategoryServiceImpl;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.util.Collection;
 import java.util.List;
 
 @RestController
@@ -21,6 +21,7 @@ public class CategoryController {
     private final CategoryServiceImpl categoryService;
 
     @PostMapping(path = "/admin/categories")
+    @ResponseStatus(HttpStatus.CREATED)
     public Category createNewCategory(@NotNull @RequestBody @Valid Category category) {
         log.info("Creating new category");
         return categoryService.createNewCategory(category);
@@ -35,6 +36,7 @@ public class CategoryController {
     }
 
     @DeleteMapping("/admin/categories/{catId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public Category deleteCategory(@NotNull @PathVariable long catId) {
         log.info("Deleting category by admin");
         return categoryService.deleteCategory(catId);

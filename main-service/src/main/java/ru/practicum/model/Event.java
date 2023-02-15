@@ -1,5 +1,7 @@
 package ru.practicum.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.status.EventStatus;
@@ -11,12 +13,16 @@ import java.time.LocalDateTime;
 @Data
 @Entity
 @Table(name = "events")
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor
 public class Event {
-    @Id
+    @javax.persistence.Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    @org.springframework.data.annotation.Id
+    private Long id;
     @NotNull
+    @Column(name = "annotation")
     private String annotation;
     @ManyToOne
     @JoinColumn(name = "category_id")
@@ -24,21 +30,28 @@ public class Event {
     @ManyToOne
     @JoinColumn(name = "initiator_id")
     private User initiator;
+    @Column(name = "created_on")
     private LocalDateTime createdOn;
+    @Column(name = "description")
     private String description;
     @NotNull
+    @Column(name = "event_date")
     private LocalDateTime eventDate;
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "location_id")
     private Location location;
     @NotNull
+    @Column(name = "paid")
     private boolean paid;
+    @Column(name = "participant_limit")
     private Long participantLimit;
+    @Column(name = "request_moderation")
     private boolean requestModeration;
+    @Column(name = "published_on")
     private LocalDateTime publishedOn;
+    @Column(name = "state")
     private EventStatus state;
     @NotNull
+    @Column(name = "title")
     private String title;
-
-
 }

@@ -36,6 +36,7 @@ public class StatisticsClient {
         ResponseEntity<Object> stastServerResponse;
         try {
             if (parameters != null) {
+                System.out.println(rest.exchange(path, method, requestEntity, Object.class, parameters));
                 stastServerResponse = rest.exchange(path, method, requestEntity, Object.class, parameters);
             } else {
                 stastServerResponse = rest.exchange(path, method, requestEntity, Object.class);

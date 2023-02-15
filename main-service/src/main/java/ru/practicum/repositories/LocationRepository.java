@@ -1,7 +1,9 @@
 package ru.practicum.repositories;
 
-import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 import ru.practicum.model.Location;
 
-public interface LocationRepository extends PagingAndSortingRepository<Location, Long> {
+@Repository
+public interface LocationRepository extends JpaRepository<Location, Long> {
 }

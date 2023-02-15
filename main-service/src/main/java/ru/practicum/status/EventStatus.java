@@ -5,7 +5,9 @@ import java.util.Optional;
 public enum EventStatus {
     PENDING,
     PUBLISHED,
-    CANCELLED;
+    CONFIRMED,
+    CANCELLED,
+    REJECTED;
 
     public static Optional<EventStatus> from(String stringState) {
         for (EventStatus state : values()) {

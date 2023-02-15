@@ -14,6 +14,6 @@ import java.util.List;
 @AllArgsConstructor
 public class EventStatusDto {
 
-    private List<Long> ids;
+    private List<Long> requestIds;
     private EventStatus status;
 }
