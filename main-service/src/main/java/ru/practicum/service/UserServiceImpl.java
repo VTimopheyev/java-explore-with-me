@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import ru.practicum.dto.UserDto;
+import ru.practicum.exceptions.CategoryInvalidNameException;
+import ru.practicum.exceptions.UserNameAlreadyExistsException;
 import ru.practicum.exceptions.UserNotFoundException;
 import ru.practicum.exceptions.UserValidationException;
 import ru.practicum.model.User;
@@ -44,5 +46,17 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(UserNotFoundException::new);
         userRepository.delete(user);
         return user;
+    }
+
+    private void checkUsernameExists(String username) {
+        Long count = userRepository
+                .findAll()
+                .stream()
+                .filter(c -> c.getName().equals(username))
+                .count();
+
+        if (count > 0) {
+            throw new UserNameAlreadyExistsException();
+        }
     }
 }

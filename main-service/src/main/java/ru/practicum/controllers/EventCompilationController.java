@@ -2,6 +2,7 @@ package ru.practicum.controllers;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.EventCompilationDisplayDto;
@@ -22,6 +23,7 @@ public class EventCompilationController {
     private final EventCompilationServiceImpl eventCompilationService;
 
     @PostMapping(path = "/admin/compilations")
+    @ResponseStatus(HttpStatus.CREATED)
     public EventCompilationDisplayDto createNewEventCompilation(
             @NotNull @RequestBody @Valid EventCompilationDto eventCompilationDto) {
         log.info("Creating new event compilation by admin");
@@ -39,6 +41,7 @@ public class EventCompilationController {
     }
 
     @DeleteMapping("/admin/compilations/{compId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public EventCompilation deleteEventCompilation(@NotNull @PathVariable long compId) {
         log.info("Deleting event compilation");
         return eventCompilationService.deleteEventCompilation(compId);

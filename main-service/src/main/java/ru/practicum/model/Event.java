@@ -1,9 +1,6 @@
 package ru.practicum.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import ru.practicum.status.EventStatus;
 
 import javax.persistence.*;
@@ -16,6 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode
 public class Event {
     @javax.persistence.Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,12 +42,13 @@ public class Event {
     @Column(name = "paid")
     private boolean paid;
     @Column(name = "participant_limit")
-    private Long participantLimit;
+    private int participantLimit;
     @Column(name = "request_moderation")
     private boolean requestModeration;
     @Column(name = "published_on")
     private LocalDateTime publishedOn;
     @Column(name = "state")
+    @Enumerated(EnumType.STRING)
     private EventStatus state;
     @NotNull
     @Column(name = "title")

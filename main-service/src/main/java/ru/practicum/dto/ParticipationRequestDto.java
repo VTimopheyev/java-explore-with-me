@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.status.ParticipationRequestStatus;
 
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
@@ -21,6 +23,7 @@ public class ParticipationRequestDto {
     private long requester;
     @NotNull
     private long event;
+    @Enumerated(EnumType.STRING)
     private ParticipationRequestStatus status;
 
 }

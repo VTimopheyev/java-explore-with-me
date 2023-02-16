@@ -17,12 +17,11 @@ public class EventDto {
     private String annotation;
     private Long category;
     private String description;
-    //@Future
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Timestamp eventDate;
     private LocationDto location;
     private boolean paid;
-    private Long participantLimit;
+    private int participantLimit;
     private boolean requestModeration;
     private String title;
     private EventStatus state;

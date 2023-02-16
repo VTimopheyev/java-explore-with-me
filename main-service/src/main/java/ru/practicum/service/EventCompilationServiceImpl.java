@@ -18,6 +18,7 @@ import ru.practicum.repositories.EventRepository;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -90,8 +91,10 @@ public class EventCompilationServiceImpl implements EventCompilationService {
         }
 
         evComp.setPinned(eventCompilationDto.isPinned());
-        evComp.setTitle(eventCompilationDto.getTitle());
 
+        if (!Objects.isNull(eventCompilationDto.getTitle())) {
+            evComp.setTitle(eventCompilationDto.getTitle());
+        }
         return eventCompilationMapper.toFullDto(eventCompilationRepository.save(evComp), events);
     }
 

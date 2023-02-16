@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import ru.practicum.dto.ParticipationRequestDto;
 import ru.practicum.exceptions.EventNotFoundException;
 import ru.practicum.exceptions.ParticipationRequestNotFoundException;
+import ru.practicum.exceptions.RequestAlreadyCreatedException;
 import ru.practicum.exceptions.UserNotFoundException;
 import ru.practicum.mappers.ParticipationRequestMapper;
 import ru.practicum.model.Event;
@@ -43,11 +44,24 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(EventNotFoundException::new);
 
+        checkIfRequestWasAlreadyCreated(event, user);
+
         partReq.setRequester(user);
         partReq.setEvent(event);
         partReq.setStatus(ParticipationRequestStatus.PENDING);
 
         return mapper.toDto(participationRequestRepository.save(partReq));
+    }
+
+    private void checkIfRequestWasAlreadyCreated(Event event, User requester) {
+        Long count = participationRequestRepository
+                .findAll()
+                .stream()
+                .filter(p -> p.getRequester().equals(requester) && p.getEvent().equals(event))
+                .count();
+        if (count > 0){
+            throw new RequestAlreadyCreatedException();
+        }
     }
 
     public ParticipationRequestDto cancelParticipationRequest(long userId, long requestId) {
@@ -59,7 +73,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
         partReq.setStatus(ParticipationRequestStatus.CANCELLED);
 
-        return mapper.toDto(participationRequestRepository.save(partReq));
+        return mapper.toDto(participationRequestRepository.saveAndFlush(partReq));
     }
 
     public List<ParticipationRequestDto> getParticipationRequests(long userId) {

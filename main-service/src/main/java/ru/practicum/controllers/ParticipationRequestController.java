@@ -25,7 +25,6 @@ public class ParticipationRequestController {
     public ParticipationRequestDto createNewRequest(@NotNull @PathVariable long userId,
                                                     @NotNull @RequestParam long eventId) {
         log.info("Creating new participation request");
-        System.out.println(userId +" "+eventId);
         return participationRequestService.createNewRequest(userId, eventId);
     }
 

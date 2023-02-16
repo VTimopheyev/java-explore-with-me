@@ -31,8 +31,7 @@ public class EventController {
     @ResponseStatus(HttpStatus.CREATED)
     public EventFullDto createNewEvent(@NotNull @RequestBody @Valid EventDto eventDto,
                                        @NotNull @PathVariable long userId) {
-        log.info("Creating new event");
-        System.out.println(eventDto);
+        log.info("Creating new event: "+eventDto);
         return eventService.createNewEvent(eventDto, userId);
     }
 
@@ -69,8 +68,8 @@ public class EventController {
     public Collection<EventFullDto> searchEventsByAdmin(@RequestParam(name = "users", required = false) List<Long> ids,
                                                         @RequestParam(name = "states", required = false) List<String> states,
                                                         @RequestParam(name = "categories", required = false) List<Long> categoryIds,
-                                                        @RequestParam(name = "rangeStart", required = false) LocalDateTime start,
-                                                        @RequestParam(name = "rangeEnd", required = false) LocalDateTime end,
+                                                        @RequestParam(name = "rangeStart", required = false) Timestamp start,
+                                                        @RequestParam(name = "rangeEnd", required = false) Timestamp end,
                                                         @RequestParam(name = "from", required = false, defaultValue = "0") int from,
                                                         @RequestParam(name = "size", required = false, defaultValue = "10") int size) {
         log.info("Searching for events by admin");
@@ -88,27 +87,27 @@ public class EventController {
                                                           @RequestParam(name = "from", required = false, defaultValue = "0") int from,
                                                           @RequestParam(name = "size", required = false, defaultValue = "10") int size,
                                                           HttpServletRequest request) {
-        statisticsClient.post("/hit", new StatsRecordDto(
+        /*statisticsClient.post("http://localhost:9090/hit", new StatsRecordDto(
                 "ewm-main-service",
                 request.getRequestURI(),
                 request.getRemoteAddr(),
-                Timestamp.from(Instant.now())));
+                Timestamp.from(Instant.now())));*/
         log.info("Searching for events by any user");
         return eventService.searchEventsByAnyUser(text, categoryIds, paid, start, end, onlyAvailable, sort, from, size);
     }
 
     @GetMapping(path = "/events/{id}")
     public EventFullDto viewParticularEventByAnyUser(
-            @NotNull @PathVariable long eventId,
+            @NotNull @PathVariable long id,
             HttpServletRequest request
     ) {
-        statisticsClient.post("/hit", new StatsRecordDto(
+        /*statisticsClient.post("/hit", new StatsRecordDto(
                 "ewm-main-service",
                 request.getRequestURI(),
                 request.getRemoteAddr(),
                 Timestamp.from(Instant.now())));
-        log.info("Viewing event by some user");
-        return eventService.viewParticularEventByAnyUser(eventId);
+        log.info("Viewing event by some user");*/
+        return eventService.viewParticularEventByAnyUser(id);
     }
 
     @PatchMapping(path = "/users/{userId}/events/{eventId}")
@@ -122,21 +121,21 @@ public class EventController {
     }
 
     @PatchMapping(path = "/users/{userId}/events/{eventId}/requests")
-    public EventStatusResponseDto updateEventParticipationRequestsStatusByInitiator(
+    public EventStatusResponseDto updateEventParticipationsRequestsStatusByInitiator(
             @NotNull @RequestBody @Valid EventStatusDto eventStatusDto,
             @NotNull @PathVariable long userId,
             @NotNull @PathVariable long eventId
     ) {
         System.out.println(eventStatusDto);
         log.info("Updating event by initiator");
-        return eventService.updateEventByUpdateEventParticipationRequestsStatusByInitiatorInitiator(
+        return eventService.updateEventParticipationRequestsStatusByInitiator(
                 userId, eventId, eventStatusDto);
     }
 
     @PatchMapping(path = "/admin/events/{eventId}")
     public EventFullDto updateEventByAdmin(
              @RequestBody EventDto eventDto,
-             @PathVariable long eventId
+             @PathVariable Long eventId
     ) {
         log.info("Updating event by admin");
         return eventService.updateEventByAdmin(eventId, eventDto);

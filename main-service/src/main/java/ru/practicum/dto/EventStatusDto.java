@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.status.EventStatus;
 
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import java.util.List;
 
 @Data
@@ -15,5 +17,6 @@ import java.util.List;
 public class EventStatusDto {
 
     private List<Long> requestIds;
+    @Enumerated(EnumType.STRING)
     private EventStatus status;
 }
