@@ -11,6 +11,7 @@ import ru.practicum.repositories.CategoryRepository;
 import ru.practicum.repositories.EventRepository;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +31,12 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = categoryRepository.findById(catId)
                 .orElseThrow(CategoryNotFoundException::new);
 
-        checkCategoryExist(category.getName());
+        checkCategoryExist(cat.getName());
+
+
+        if (!Objects.isNull(cat.getName())) {
+            category.setName(cat.getName());
+        }
 
         return categoryRepository.save(category);
     }
@@ -41,6 +47,8 @@ public class CategoryServiceImpl implements CategoryService {
                 .stream()
                 .filter(c -> c.getName().equals(categoryName))
                 .count();
+        log.info("Count: " + count);
+
 
         if (count > 0) {
             throw new CategoryInvalidNameException();

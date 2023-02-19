@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 import ru.practicum.model.EventCompilation;
 
 import java.util.Collection;
+
 @Repository
 public interface EventCompilationRepository extends JpaRepository<EventCompilation, Long> {
     Collection<EventCompilation> findByPinnedEquals(boolean pinned, PageRequest pr);

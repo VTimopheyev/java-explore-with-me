@@ -16,7 +16,6 @@ import ru.practicum.status.EventStatus;
 
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
@@ -41,6 +40,8 @@ public class EventServiceImpl implements EventService {
     private final ParticipationRequestMapper participationRequestMapper;
 
     public EventFullDto createNewEvent(EventDto eventDto, long userId) {
+        validateEvent(eventDto);
+
         Float lon = eventDto.getLocation().getLon();
         Float lat = eventDto.getLocation().getLat();
         Location loc = locationRepository.saveAndFlush(new Location(null, lon, lat));
@@ -103,29 +104,25 @@ public class EventServiceImpl implements EventService {
         List<ParticipationRequest> list = participationRequestRepository
                 .findAll()
                 .stream()
-                .filter(p -> p.getEvent().getId() == e.getId())
-                .filter(p -> p.getStatus().equals(CONFIRMED))
+                .filter(p -> p.getEvent().getId().equals(e.getId()) && p.getStatus().equals(CONFIRMED))
                 .collect(Collectors.toList());
         return list.size();
     }
 
-    int getViewsOFEvent(Event e) {
-        /*Timestamp ts = Timestamp.valueOf(e.getCreatedOn());
+    public int getViewsOFEvent(Event e) {
+        Timestamp ts = Timestamp.valueOf(e.getCreatedOn());
         Timestamp ts1 = Timestamp.valueOf(LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()));
-        String path = "http://localhost:9090/stats";
-        List<String> uris = List.of("event/"+e.getId());
-        Map<String, Object> parameters = Map.of("start", ts,
-                "end", ts1, "unique", "false", "uris", uris);
+        List<String> uris = List.of("event/" + e.getId());
+        String path = "http://stats-server:9090/stats?start={start}&end={end}&uris={uris}&unique={unique}";
 
-        List<StatsDto> eventStatistics = (List<StatsDto>) statisticsClient.get(path, parameters).getBody();
+        Map<String, Object> parameters = Map.of(
+                "start", ts,
+                "end", ts1,
+                "uris", uris,
+                "unique", "false"
+        );
 
-        if (eventStatistics.isEmpty()) {
-            return 0;
-        }
-
-        return eventStatistics.get(0).getHits();*/
-
-        return 0;
+        return statisticsClient.get(path, parameters);
     }
 
 
@@ -221,6 +218,7 @@ public class EventServiceImpl implements EventService {
 
         foundEvents = eventRepository.findAllByStateEquals(PUBLISHED, pr);
 
+
         if (!Objects.isNull(text)) {
             foundEvents = foundEvents
                     .stream()
@@ -248,10 +246,10 @@ public class EventServiceImpl implements EventService {
                     .collect(Collectors.toList());
         }
 
-        if (!categoryIds.isEmpty()) {
+        if (!Objects.isNull(categoryIds) && !categoryIds.isEmpty()) {
             foundEvents = foundEvents
                     .stream()
-                    .filter(event -> categoryIds.contains(event.getCategory()))
+                    .filter(event -> categoryIds.contains(event.getCategory().getId()))
                     .collect(Collectors.toList());
         }
 
@@ -262,7 +260,7 @@ public class EventServiceImpl implements EventService {
                     .collect(Collectors.toList());
         }
 
-        if (!Objects.isNull(onlyAvailable) && onlyAvailable) {
+        if (onlyAvailable) {
             foundEvents = foundEvents
                     .stream()
                     .filter(event -> event.getParticipantLimit() >
@@ -309,51 +307,68 @@ public class EventServiceImpl implements EventService {
 
 
     public EventFullDto updateEventByInitiator(long userId, long eventId, EventDto eventDto) {
-        log.info("Event to update: " + eventDto);
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(EventNotFoundException::new);
 
-        if (!event.getState().equals(PENDING) || !event.getState().equals(CANCELLED)) {
+        User initiator = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        if (!initiator.getId().equals(userId)) {
+            throw new EventEditingNotAllowedException();
+        }
+
+        if (!event.getState().equals(PENDING) && !event.getState().equals(EventStatus.REJECTED)) {
             throw new EventInvalidStatusException();
         }
 
-        if (eventDto.getEventDate().toLocalDateTime().isBefore(
-                LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()).plusHours(2L))) {
-            throw new EventInvalidEventDateException();
+        if (!Objects.isNull(eventDto.getStateAction())) {
+            if (eventDto.getStateAction().equals("CANCEL_REVIEW")) {
+                event.setState(EventStatus.CANCELED);
+            } else if (eventDto.getStateAction().equals("SEND_TO_REVIEW")) {
+                event.setState(PENDING);
+            }
         }
 
-        event.setAnnotation(eventDto.getAnnotation());
+        if (!Objects.isNull(eventDto.getEventDate())) {
+            if (eventDto.getEventDate().toLocalDateTime().isBefore(
+                    LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()).plusHours(2L))) {
+                throw new EventInvalidEventDateException();
+            } else {
+                event.setEventDate(eventDto.getEventDate().toLocalDateTime());
+            }
+        }
 
-        event.setCategory(categoryRepository.findById(eventDto.getCategory())
-                .orElseThrow(CategoryNotFoundException::new));
+        if (!Objects.isNull(eventDto.getAnnotation())) {
+            event.setAnnotation(eventDto.getAnnotation());
+        }
 
-        event.setInitiator(userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new));
+        if (!Objects.isNull(eventDto.getCategory())) {
+            event.setCategory(categoryRepository.findById(eventDto.getCategory())
+                    .orElseThrow(CategoryNotFoundException::new));
+        }
 
-        event.setEventDate(eventDto.getEventDate().toLocalDateTime());
+        if (!Objects.isNull(eventDto.getDescription())) {
+            event.setDescription(eventDto.getDescription());
+        }
 
-        event.setDescription(eventDto.getDescription());
+        if (!Objects.isNull(eventDto.getLocation())) {
+            Location location = new Location();
+            location.setLon(eventDto.getLocation().getLon());
+            location.setLat(eventDto.getLocation().getLat());
+            event.setLocation(locationRepository.save(location));
+        }
 
-        Location location = new Location();
-        location.setLon(eventDto.getLocation().getLon());
-        location.setLat(eventDto.getLocation().getLat());
-        event.setLocation(locationRepository.save(location));
+        if (!Objects.isNull(eventDto.getTitle())) {
+            event.setTitle(eventDto.getTitle());
+        }
 
-        event.setPaid(eventDto.isPaid());
-
-        event.setTitle(eventDto.getTitle());
-
-        event.setRequestModeration(eventDto.isRequestModeration());
-
-        if (!Objects.isNull(eventDto.getParticipantLimit())) {
+        if (eventDto.getParticipantLimit() > event.getParticipantLimit()) {
             event.setParticipantLimit(eventDto.getParticipantLimit());
         }
 
-        event.setState(eventDto.getState());
-
-        return eventMapper.toFullDto(eventRepository.save(event),
+        return eventMapper.toFullDto(eventRepository.saveAndFlush(event),
                 getConfirmedRequests(event),
-                userMapper.toUserDto(event.getInitiator()),
+                userMapper.toUserDto(initiator),
                 getViewsOFEvent(event));
     }
 
@@ -361,41 +376,28 @@ public class EventServiceImpl implements EventService {
     public EventStatusResponseDto updateEventParticipationRequestsStatusByInitiator(
             long userId, long eventId, EventStatusDto eventStatusDto) {
 
-        List<Long> list = eventStatusDto.getRequestIds();
-        log.info("Update statuses for event requests: " + list);
-
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(EventNotFoundException::new);
 
-        log.info("Event to update requests for: " + event);
 
         User initiator = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
-        log.info("Initiator found: " + initiator);
-
-        log.info("The event participants limit: " + event.getParticipantLimit());
-        log.info("The event confirmed participants number: " + getConfirmedRequests(event));
         if ((event.getParticipantLimit() == getConfirmedRequests(event)) && (event.getParticipantLimit() > 0)) {
             throw new ParticipationLimitException();
         }
 
-        log.info("Ids to change statuses for requests: " + eventStatusDto.getRequestIds());
         List<Long> requestsIds = eventStatusDto.getRequestIds();
 
         List<ParticipationRequestDto> confirmedRequests = new ArrayList<>();
         List<ParticipationRequestDto> rejectedRequests = new ArrayList<>();
 
-        log.info("List of requests to change statuses: " + participationRequestRepository.findByIdIn(requestsIds));
         List<ParticipationRequest> parReqs = participationRequestRepository.findByIdIn(requestsIds);
 
         for (ParticipationRequest pr : parReqs) {
 
             if ((getConfirmedRequests(event) < event.getParticipantLimit() || event.getParticipantLimit() == 0)
                     && eventStatusDto.getStatus().equals(CONFIRMED)) {
-                boolean changingToConfirmed = (getConfirmedRequests(event) < event.getParticipantLimit() ||
-                        event.getParticipantLimit() == 0) && eventStatusDto.getStatus().equals(CONFIRMED);
-                log.info("Changing to CONFIRMED?: " + changingToConfirmed);
                 pr.setStatus(CONFIRMED);
                 confirmedRequests.add(participationRequestMapper.toDto(participationRequestRepository.save(pr)));
             } else {
@@ -409,44 +411,31 @@ public class EventServiceImpl implements EventService {
 
     public EventFullDto updateEventByAdmin(Long eventId, EventDto eventDto) {
 
-        log.info("Update status for event: " + eventDto);
-
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(UserNotFoundException::new);
-        log.info("The event: " + event);
 
-        if (event.getState().equals(EventStatus.CANCELLED)){
+        if (event.getState().equals(EventStatus.CANCELED)) {
             throw new EventInvalidStatusException();
         }
 
-        log.info("Event date invalid: " + (Objects.nonNull(eventDto.getEventDate()) && eventDto.getEventDate().toLocalDateTime().isBefore(
-                LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()).plusHours(1L))));
-
-        if (Objects.nonNull(eventDto.getEventDate()) && eventDto.getEventDate().toLocalDateTime().isBefore(
+        if (!Objects.isNull(eventDto.getEventDate()) && eventDto.getEventDate().toLocalDateTime().isBefore(
                 LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()).plusHours(1L))) {
             throw new EventInvalidEventDateException();
         }
 
-        log.info("Wrong status to publish?: " + (eventDto.getStateAction().equals("PUBLISH_EVENT") &&
-                !event.getState().equals(PENDING)));
         if (eventDto.getStateAction().equals("PUBLISH_EVENT") && !event.getState().equals(PENDING)) {
             throw new EventInvalidStatusException();
         } else if (eventDto.getStateAction().equals("PUBLISH_EVENT")) {
             event.setState(PUBLISHED);
             event.setPublishedOn(LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()));
-            log.info("Set published: " + event);
         }
 
-        log.info("Wrong status to cancel?: " + (eventDto.getStateAction().equals("REJECT_EVENT") &&
-                !event.getState().equals(PENDING)));
         if (eventDto.getStateAction().equals("REJECT_EVENT") && !event.getState().equals(PENDING)) {
             throw new EventInvalidStatusException();
         } else if (eventDto.getStateAction().equals("REJECT_EVENT")) {
             event.setState(EventStatus.REJECTED);
-            log.info("Set cancelled: " + event);
         }
 
-        log.info("Annotation is null?: " + Objects.isNull(eventDto.getAnnotation()));
         if (!Objects.isNull(eventDto.getAnnotation())) {
             event.setAnnotation(eventDto.getAnnotation());
         }
@@ -469,37 +458,36 @@ public class EventServiceImpl implements EventService {
             event.setLocation(locationRepository.save(location));
         }
 
-        if (!Objects.isNull(eventDto.isPaid())) {
-            event.setPaid(eventDto.isPaid());
-        }
-
         if (!Objects.isNull(eventDto.getTitle())) {
             event.setTitle(eventDto.getTitle());
         }
 
-        if (!Objects.isNull(eventDto.isRequestModeration())) {
-            event.setRequestModeration(eventDto.isRequestModeration());
-        }
-
-        if (!Objects.isNull(eventDto.getParticipantLimit())) {
-            event.setParticipantLimit(eventDto.getParticipantLimit());
-        }
-
-        if (!Objects.isNull(eventDto.getParticipantLimit())) {
+        if (eventDto.getParticipantLimit() > 0) {
             event.setParticipantLimit(eventDto.getParticipantLimit());
         }
 
         Event savedEvent = eventRepository.saveAndFlush(event);
-        log.info("Event saved: " + savedEvent);
-
 
         int confReq = getConfirmedRequests(savedEvent);
-        log.info("Confirmed requests for the event: " + confReq);
         UserDto initiator = userMapper.toUserDto(savedEvent.getInitiator());
-        log.info("Initiator: " + initiator);
         int views = getViewsOFEvent(savedEvent);
-        log.info("Views: " + views);
 
         return eventMapper.toFullDto(savedEvent, confReq, initiator, views);
+    }
+
+    private void validateEvent(EventDto event) {
+        if (Objects.isNull(event.getAnnotation()) || event.getAnnotation().isEmpty()) {
+            throw new EventValidationException();
+        }
+
+        if (Objects.isNull(event.getDescription()) || event.getDescription().isEmpty()) {
+            throw new EventValidationException();
+        }
+
+        if (Objects.isNull(event.getEventDate())
+                || event.getEventDate().toLocalDateTime().isBefore(
+                LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()))) {
+            throw new EventInvalidEventDateException();
+        }
     }
 }

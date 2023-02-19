@@ -35,14 +35,12 @@ public class EventCompilationServiceImpl implements EventCompilationService {
     public EventCompilationDisplayDto createNewEventCompilation(EventCompilationDto eventCompilationDto) {
         String eventIds = eventCompilationDto.getEvents().stream().map(Object::toString)
                 .collect(Collectors.joining(", "));
-        log.info("Saving IDs as string for entity " + eventIds);
 
 
         EventCompilation eventCompilation = new EventCompilation();
         eventCompilation.setEventIds(eventIds);
         eventCompilation.setPinned(eventCompilationDto.isPinned());
         eventCompilation.setTitle(eventCompilationDto.getTitle());
-        log.info("Creating eventComp entity " + eventCompilation);
 
 
         List<EventFullDto> events = eventRepository.findAllByIdIn(eventCompilationDto.getEvents())
@@ -53,7 +51,6 @@ public class EventCompilationServiceImpl implements EventCompilationService {
                 .collect(Collectors.toList());
 
         EventCompilation ec = eventCompilationRepository.saveAndFlush(eventCompilation);
-        log.info("Saved entity: " + ec);
 
         return eventCompilationMapper.toFullDto(ec, events);
     }
@@ -117,7 +114,6 @@ public class EventCompilationServiceImpl implements EventCompilationService {
     }
 
     private List<EventFullDto> convertStringToFullEventDto(String eventsId) {
-        log.info("Got string to parse to Long:" + eventsId);
         List<Long> ids = new ArrayList<>();
 
         if (eventsId.length() == 1) {
@@ -125,13 +121,11 @@ public class EventCompilationServiceImpl implements EventCompilationService {
             ids.add(idAsLong);
         } else if (eventsId.length() > 1) {
             String[] idsAsArray = eventsId.split(", ");
-            log.info("Parsing String with IDs:" + idsAsArray);
+
             for (String s : idsAsArray) {
                 ids.add(Long.parseLong(s));
             }
         }
-
-        log.info("Creating list with IDs:" + ids);
 
         return eventRepository.findAllByIdIn(ids)
                 .stream()

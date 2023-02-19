@@ -31,7 +31,7 @@ public class CategoryController {
     public Category updateCategoryByAdmin(
             @NotNull @RequestBody @Valid Category category,
             @NotNull @PathVariable long catId) {
-        log.info("Updating event by initiator");
+        log.info("Updating category");
         return categoryService.updateCategoryByAdmin(catId, category);
     }
 

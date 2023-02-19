@@ -6,4 +6,5 @@ import ru.practicum.model.Location;
 
 @Repository
 public interface LocationRepository extends JpaRepository<Location, Long> {
+
 }

@@ -197,7 +197,6 @@ public class StatisticServiceImpl implements StatisticService {
                 .collect(Collectors.toList());
     }
 
-
     private List<String> getAllUris(List<Stat> allStatistics) {
         List<String> allUris = new ArrayList<>();
         for (Stat s : allStatistics) {
@@ -207,5 +206,4 @@ public class StatisticServiceImpl implements StatisticService {
         }
         return allUris;
     }
-
 }

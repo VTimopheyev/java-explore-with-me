@@ -14,7 +14,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -31,7 +30,7 @@ public class EventController {
     @ResponseStatus(HttpStatus.CREATED)
     public EventFullDto createNewEvent(@NotNull @RequestBody @Valid EventDto eventDto,
                                        @NotNull @PathVariable long userId) {
-        log.info("Creating new event: "+eventDto);
+        log.info("Creating new event: " + eventDto);
         return eventService.createNewEvent(eventDto, userId);
     }
 
@@ -87,11 +86,12 @@ public class EventController {
                                                           @RequestParam(name = "from", required = false, defaultValue = "0") int from,
                                                           @RequestParam(name = "size", required = false, defaultValue = "10") int size,
                                                           HttpServletRequest request) {
-        /*statisticsClient.post("http://localhost:9090/hit", new StatsRecordDto(
+        statisticsClient.post(new StatsRecordDto(
                 "ewm-main-service",
                 request.getRequestURI(),
                 request.getRemoteAddr(),
-                Timestamp.from(Instant.now())));*/
+                Timestamp.from(Instant.now())));
+        log.info("Endpoint hit saved");
         log.info("Searching for events by any user");
         return eventService.searchEventsByAnyUser(text, categoryIds, paid, start, end, onlyAvailable, sort, from, size);
     }
@@ -101,12 +101,14 @@ public class EventController {
             @NotNull @PathVariable long id,
             HttpServletRequest request
     ) {
-        /*statisticsClient.post("/hit", new StatsRecordDto(
+        statisticsClient.post(new StatsRecordDto(
                 "ewm-main-service",
                 request.getRequestURI(),
                 request.getRemoteAddr(),
                 Timestamp.from(Instant.now())));
-        log.info("Viewing event by some user");*/
+
+        log.info("Endpoint hit saved");
+        log.info("Searching for events by any user");
         return eventService.viewParticularEventByAnyUser(id);
     }
 
@@ -126,7 +128,6 @@ public class EventController {
             @NotNull @PathVariable long userId,
             @NotNull @PathVariable long eventId
     ) {
-        System.out.println(eventStatusDto);
         log.info("Updating event by initiator");
         return eventService.updateEventParticipationRequestsStatusByInitiator(
                 userId, eventId, eventStatusDto);
@@ -134,8 +135,8 @@ public class EventController {
 
     @PatchMapping(path = "/admin/events/{eventId}")
     public EventFullDto updateEventByAdmin(
-             @RequestBody EventDto eventDto,
-             @PathVariable Long eventId
+            @RequestBody EventDto eventDto,
+            @PathVariable Long eventId
     ) {
         log.info("Updating event by admin");
         return eventService.updateEventByAdmin(eventId, eventDto);

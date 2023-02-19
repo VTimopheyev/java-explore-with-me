@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.practicum.status.EventStatus;
+import ru.practicum.status.ParticipationRequestStatus;
 
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -18,5 +18,5 @@ public class EventStatusDto {
 
     private List<Long> requestIds;
     @Enumerated(EnumType.STRING)
-    private EventStatus status;
+    private ParticipationRequestStatus status;
 }

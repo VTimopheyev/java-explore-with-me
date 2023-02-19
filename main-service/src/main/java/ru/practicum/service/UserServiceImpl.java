@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import ru.practicum.dto.UserDto;
-import ru.practicum.exceptions.CategoryInvalidNameException;
 import ru.practicum.exceptions.UserNameAlreadyExistsException;
 import ru.practicum.exceptions.UserNotFoundException;
 import ru.practicum.exceptions.UserValidationException;
@@ -23,6 +22,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     public User createNewUser(UserDto userDto) {
+        checkUsernameExists(userDto.getName());
 
         if (!userDto.getEmail().contains("@")) {
             throw new UserValidationException();

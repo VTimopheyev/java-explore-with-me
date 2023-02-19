@@ -19,12 +19,4 @@ public class ParticipationRequestMapper {
                 pr.getStatus()
         );
     }
-
-    /*public ParticipationRequest toPr(ParticipationRequestDto dto) {
-        return new ParticipationRequest(
-                dto.getId(),
-                dto.getName(),
-                dto.getEmail()
-        );
-    }*/
 }

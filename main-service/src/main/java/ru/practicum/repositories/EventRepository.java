@@ -12,15 +12,11 @@ import java.util.List;
 @Repository
 public interface EventRepository extends JpaRepository<Event, Long> {
 
-    List<Event> findByStateEquals(EventStatus published);
-
     Collection<Event> findAllByIdNot(long i, PageRequest pr);
 
     Collection<Event> findAllByIdIn(List<Long> eventIds);
 
     Collection<Event> findByIdIn(List<Long> ids, PageRequest pr);
-
-    List<Event> AnnotationContainingOrDescriptionContainingIgnoreCase(String text, String text1, PageRequest pr);
 
     Collection<Event> findAllByStateEquals(EventStatus published, PageRequest pr);
 }
