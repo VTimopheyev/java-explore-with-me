@@ -10,6 +10,7 @@ public class MainServer {
     public static void main(String[] args) {
         SpringApplication.run(MainServer.class, args);
     }
+
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();
