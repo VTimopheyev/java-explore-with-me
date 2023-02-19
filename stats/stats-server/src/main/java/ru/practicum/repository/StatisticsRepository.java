@@ -6,6 +6,7 @@ import ru.practicum.model.Stat;
 
 import java.sql.Timestamp;
 import java.util.List;
+
 @Repository
 public interface StatisticsRepository extends JpaRepository<Stat, Long> {
     List<Stat> findAllByStampAfterAndStampBeforeOrderByStamp(Timestamp start, Timestamp end);
