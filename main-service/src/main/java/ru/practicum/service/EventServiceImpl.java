@@ -110,9 +110,9 @@ public class EventServiceImpl implements EventService {
     }
 
     public int getViewsOFEvent(Event e) {
-        Timestamp ts = Timestamp.valueOf(e.getCreatedOn());
+        Timestamp ts = Timestamp.valueOf(e.getCreatedOn().minusMonths(240L));
         Timestamp ts1 = Timestamp.valueOf(LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()));
-        List<String> uris = List.of("event/" + e.getId());
+        String uris = ("/events/" + e.getId());
         String path = "http://stats-server:9090/stats?start={start}&end={end}&uris={uris}&unique={unique}";
 
         Map<String, Object> parameters = Map.of(

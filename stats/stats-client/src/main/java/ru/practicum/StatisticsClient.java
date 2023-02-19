@@ -20,19 +20,17 @@ public class StatisticsClient {
 
     public Integer get(String path, Map<String, Object> params) {
 
-        log.info(params.toString());
         ResponseEntity<StatsDto[]> result = makeAndSendGetRequest(HttpMethod.GET, path, params, null);
 
         StatsDto[] statistics = result.getBody();
 
         if (!Objects.isNull(statistics) && statistics.length != 0) {
-            log.info("Array came here: " + statistics);
-            log.info("Array has length: " + statistics.length);
             List<StatsDto> list = Arrays.asList(statistics);
             return list.get(0).getHits();
         }
         return 0;
     }
+
 
     public void post(StatsRecordDto body) {
         String path = "http://stats-server:9090/hit";

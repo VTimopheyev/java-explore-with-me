@@ -91,8 +91,7 @@ public class EventController {
                 request.getRequestURI(),
                 request.getRemoteAddr(),
                 Timestamp.from(Instant.now())));
-        log.info("Endpoint hit saved");
-        log.info("Searching for events by any user");
+
         return eventService.searchEventsByAnyUser(text, categoryIds, paid, start, end, onlyAvailable, sort, from, size);
     }
 
@@ -107,8 +106,6 @@ public class EventController {
                 request.getRemoteAddr(),
                 Timestamp.from(Instant.now())));
 
-        log.info("Endpoint hit saved");
-        log.info("Searching for events by any user");
         return eventService.viewParticularEventByAnyUser(id);
     }
 

@@ -27,6 +27,7 @@ public class StatisticController {
     @ResponseStatus(HttpStatus.CREATED)
     public StatsDto saveRequestToStatistics(@NotNull @RequestBody @Valid StatsRecordDto statsDto) {
         log.info("Creating request to statistics");
+        log.info("Timestamp for the hit: " + statsDto.getTimestamp());
         return statisticService.logRequestToStatistics(statsDto);
     }
 

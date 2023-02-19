@@ -206,4 +206,8 @@ public class StatisticServiceImpl implements StatisticService {
         }
         return allUris;
     }
+
+    /*public Integer getHitsForTheEvent(Timestamp start, Timestamp end, long id, Boolean unique) {
+        getStatistics(start, end, List.of("event/" + id), unique);
+    }*/
 }
