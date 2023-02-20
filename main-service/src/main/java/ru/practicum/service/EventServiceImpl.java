@@ -88,7 +88,18 @@ public class EventServiceImpl implements EventService {
 
         PageRequest pr = PageRequest.of((from / size), size);
 
-        return eventRepository
+        List<EventFullDto> listToSend = eventRepository
+                .findAll(pr)
+                .stream()
+                .filter(e -> e.getInitiator().equals(user))
+                .map(e -> eventMapper.toFullDto(e, getConfirmedRequests(e),
+                        userMapper.toUserDto(user),
+                        getViewsOFEvent(e)))
+                .collect(Collectors.toList());
+
+        return fillUpViewsAndConfirmedRequests(listToSend)
+
+        /*return eventRepository
                 .findAll(pr)
                 .stream()
                 .filter(e -> e.getInitiator().equals(user))
@@ -97,7 +108,25 @@ public class EventServiceImpl implements EventService {
                         getViewsOFEvent(e)))
                 .sorted(Comparator.comparingInt(EventFullDto::getViews)
                         .reversed())
-                .collect(Collectors.toList());
+                .collect(Collectors.toList());*/
+    }
+
+    private List<EventFullDto> fillUpViewsAndConfirmedRequests(List<EventFullDto> list) {
+        List<Long> ids = new ArrayList<>();
+        for(EventFullDto e : list){
+            ids.add(e.getId());
+        }
+
+        List<ParticipationRequest> confirmedReqs = participationRequestRepository.findByIdInAndStatusEquals(
+                ids, CONFIRMED);
+
+        List<>
+
+        Map<Long, Integer> confirmedReqsById = new HashMap<>();
+        Map<Long, Integer> views = new HashMap<>();
+
+
+        List<ParticipationRequest> confirmedReqs =
     }
 
     int getConfirmedRequests(Event e) {
