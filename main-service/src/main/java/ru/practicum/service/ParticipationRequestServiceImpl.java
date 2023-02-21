@@ -84,8 +84,9 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     }
 
     public ParticipationRequestDto cancelParticipationRequest(long userId, long requestId) {
-        userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+        if (!userRepository.existsById(userId)) {
+            throw new UserNotFoundException();
+        }
 
         List<ParticipationRequest> list = participationRequestRepository
                 .findAll()

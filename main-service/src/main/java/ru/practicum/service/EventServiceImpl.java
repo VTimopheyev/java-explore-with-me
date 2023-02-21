@@ -38,6 +38,7 @@ public class EventServiceImpl implements EventService {
     private final ParticipationRequestRepository participationRequestRepository;
     private final StatisticsClient statisticsClient;
     private final ParticipationRequestMapper participationRequestMapper;
+    private final String path = "http://stats-server:9090/stats?start={start}&end={end}&uris={uris}&unique={unique}";
 
     public EventFullDto createNewEvent(EventDto eventDto, long userId) {
         validateEvent(eventDto);
@@ -92,44 +93,50 @@ public class EventServiceImpl implements EventService {
                 .findAll(pr)
                 .stream()
                 .filter(e -> e.getInitiator().equals(user))
-                .map(e -> eventMapper.toFullDto(e, getConfirmedRequests(e),
+                .map(e -> eventMapper.toFullDto(e, 0,
                         userMapper.toUserDto(user),
-                        getViewsOFEvent(e)))
+                        0))
                 .collect(Collectors.toList());
 
         return fillUpViewsAndConfirmedRequests(listToSend)
-
-        /*return eventRepository
-                .findAll(pr)
                 .stream()
-                .filter(e -> e.getInitiator().equals(user))
-                .map(e -> eventMapper.toFullDto(e, getConfirmedRequests(e),
-                        userMapper.toUserDto(user),
-                        getViewsOFEvent(e)))
                 .sorted(Comparator.comparingInt(EventFullDto::getViews)
                         .reversed())
-                .collect(Collectors.toList());*/
+                .collect(Collectors.toList());
     }
 
-    private List<EventFullDto> fillUpViewsAndConfirmedRequests(List<EventFullDto> list) {
+    public List<EventFullDto> fillUpViewsAndConfirmedRequests(List<EventFullDto> list) {
         List<Long> ids = new ArrayList<>();
-        for(EventFullDto e : list){
+
+        for (EventFullDto e : list) {
             ids.add(e.getId());
         }
 
-        List<ParticipationRequest> confirmedReqs = participationRequestRepository.findByIdInAndStatusEquals(
+        List<ParticipationRequest> confirmedRequestsForAll = participationRequestRepository.findByIdInAndStatusEquals(
                 ids, CONFIRMED);
 
-        List<>
+        List<StatsDto> statsList = getStatsForAllEvents();
 
-        Map<Long, Integer> confirmedReqsById = new HashMap<>();
-        Map<Long, Integer> views = new HashMap<>();
-
-
-        List<ParticipationRequest> confirmedReqs =
+        for (EventFullDto e : list) {
+            for (StatsDto dto : statsList) {
+                if (dto.getUri().equals("events/" + e.getId())) {
+                    e.setViews(dto.getHits());
+                    e.setConfirmedRequests(countRequestForList(e.getId(), confirmedRequestsForAll));
+                }
+            }
+        }
+        return list;
     }
 
-    int getConfirmedRequests(Event e) {
+    public int countRequestForList(long id, List<ParticipationRequest> confirmedRequestsForAll) {
+
+        return (int) confirmedRequestsForAll
+                .stream()
+                .filter(c -> c.getEvent().getId().equals(id))
+                .count();
+    }
+
+    public int getConfirmedRequests(Event e) {
         List<ParticipationRequest> list = participationRequestRepository
                 .findAll()
                 .stream()
@@ -138,11 +145,25 @@ public class EventServiceImpl implements EventService {
         return list.size();
     }
 
+    public List<StatsDto> getStatsForAllEvents() {
+        Timestamp ts = Timestamp.valueOf(
+                LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()).minusMonths(240L));
+        Timestamp ts1 = Timestamp.valueOf(LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()));
+
+        Map<String, Object> parameters = Map.of(
+                "start", ts,
+                "end", ts1,
+                "uris", "",
+                "unique", "false"
+        );
+
+        return statisticsClient.getAll(path, parameters);
+    }
+
     public int getViewsOFEvent(Event e) {
         Timestamp ts = Timestamp.valueOf(e.getCreatedOn().minusMonths(240L));
         Timestamp ts1 = Timestamp.valueOf(LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()));
         String uris = ("/events/" + e.getId());
-        String path = "http://stats-server:9090/stats?start={start}&end={end}&uris={uris}&unique={unique}";
 
         Map<String, Object> parameters = Map.of(
                 "start", ts,
@@ -168,8 +189,10 @@ public class EventServiceImpl implements EventService {
 
     public Collection<ParticipationRequestDto> getParticipationRequestsForEventOfInitiator(
             long userId, long eventId) {
-        userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+
+        if (!userRepository.existsById(userId)) {
+            throw new UserNotFoundException();
+        }
 
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(EventNotFoundException::new);
@@ -226,11 +249,15 @@ public class EventServiceImpl implements EventService {
                     .collect(Collectors.toList());
         }
 
-        return events
+        List<EventFullDto> listToSend = events
                 .stream()
-                .map(e -> eventMapper.toFullDto(e, getConfirmedRequests(e),
+                .map(e -> eventMapper.toFullDto(e, 0,
                         userMapper.toUserDto(e.getInitiator()),
-                        getViewsOFEvent(e)))
+                        0))
+                .collect(Collectors.toList());
+
+        return fillUpViewsAndConfirmedRequests(listToSend)
+                .stream()
                 .sorted(Comparator.comparingInt(EventFullDto::getViews)
                         .reversed())
                 .collect(Collectors.toList());
@@ -311,11 +338,17 @@ public class EventServiceImpl implements EventService {
             }
         }
 
-        return foundEvents
+        List<EventFullDto> listToSend = foundEvents
                 .stream()
-                .map(e -> eventMapper.toFullDto(e, getConfirmedRequests(e),
+                .map(e -> eventMapper.toFullDto(e, 0,
                         userMapper.toUserDto(e.getInitiator()),
-                        getViewsOFEvent(e)))
+                        0))
+                .collect(Collectors.toList());
+
+        return fillUpViewsAndConfirmedRequests(listToSend)
+                .stream()
+                .sorted(Comparator.comparingInt(EventFullDto::getViews)
+                        .reversed())
                 .collect(Collectors.toList());
     }
 
@@ -409,8 +442,9 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(EventNotFoundException::new);
 
 
-        User initiator = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+        if (!userRepository.existsById(userId)) {
+            throw new UserNotFoundException();
+        }
 
         if ((event.getParticipantLimit() == getConfirmedRequests(event)) && (event.getParticipantLimit() > 0)) {
             throw new ParticipationLimitException();

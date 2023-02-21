@@ -18,6 +18,8 @@ import java.util.*;
 public class StatisticsClient {
     private RestTemplate rest;
 
+    private final String hitPath = "http://stats-server:9090/hit";
+
     public Integer get(String path, Map<String, Object> params) {
 
         ResponseEntity<StatsDto[]> result = makeAndSendGetRequest(HttpMethod.GET, path, params, null);
@@ -31,10 +33,20 @@ public class StatisticsClient {
         return 0;
     }
 
+    public List<StatsDto> getAll(String path, Map<String, Object> params) {
+        ResponseEntity<StatsDto[]> result = makeAndSendGetRequest(HttpMethod.GET, path, params, null);
+        StatsDto[] statistics = result.getBody();
+
+        if (!Objects.isNull(statistics) && statistics.length != 0) {
+            return Arrays.asList(statistics);
+        }
+
+        return new ArrayList<>();
+    }
+
 
     public void post(StatsRecordDto body) {
-        String path = "http://stats-server:9090/hit";
-        makeAndSendPostRequest(HttpMethod.POST, path, null, body);
+        makeAndSendPostRequest(HttpMethod.POST, hitPath, null, body);
     }
 
     private <T> ResponseEntity<StatsDto[]> makeAndSendGetRequest(HttpMethod method, String path,

@@ -15,10 +15,7 @@ import ru.practicum.model.EventCompilation;
 import ru.practicum.repositories.EventCompilationRepository;
 import ru.practicum.repositories.EventRepository;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -45,9 +42,15 @@ public class EventCompilationServiceImpl implements EventCompilationService {
 
         List<EventFullDto> events = eventRepository.findAllByIdIn(eventCompilationDto.getEvents())
                 .stream()
-                .map(e -> eventMapper.toFullDto(e, eventService.getConfirmedRequests(e),
+                .map(e -> eventMapper.toFullDto(e, 0,
                         userMapper.toUserDto(e.getInitiator()),
-                        eventService.getViewsOFEvent(e)))
+                        0))
+                .collect(Collectors.toList());
+
+        events = eventService.fillUpViewsAndConfirmedRequests(events)
+                .stream()
+                .sorted(Comparator.comparingInt(EventFullDto::getViews)
+                        .reversed())
                 .collect(Collectors.toList());
 
         EventCompilation ec = eventCompilationRepository.saveAndFlush(eventCompilation);
@@ -69,9 +72,9 @@ public class EventCompilationServiceImpl implements EventCompilationService {
             evComp.setEventIds(eventIds);
             events = eventRepository.findAllByIdIn(eventCompilationDto.getEvents())
                     .stream()
-                    .map(e -> eventMapper.toFullDto(e, eventService.getConfirmedRequests(e),
+                    .map(e -> eventMapper.toFullDto(e, 0,
                             userMapper.toUserDto(e.getInitiator()),
-                            eventService.getViewsOFEvent(e)))
+                            0))
                     .collect(Collectors.toList());
         } else {
             List<Long> ids = new ArrayList<>();
@@ -81,11 +84,17 @@ public class EventCompilationServiceImpl implements EventCompilationService {
             }
             events = eventRepository.findAllByIdIn(ids)
                     .stream()
-                    .map(e -> eventMapper.toFullDto(e, eventService.getConfirmedRequests(e),
+                    .map(e -> eventMapper.toFullDto(e, 0,
                             userMapper.toUserDto(e.getInitiator()),
-                            eventService.getViewsOFEvent(e)))
+                            0))
                     .collect(Collectors.toList());
         }
+
+        events = eventService.fillUpViewsAndConfirmedRequests(events)
+                .stream()
+                .sorted(Comparator.comparingInt(EventFullDto::getViews)
+                        .reversed())
+                .collect(Collectors.toList());
 
         evComp.setPinned(eventCompilationDto.isPinned());
 
@@ -127,11 +136,17 @@ public class EventCompilationServiceImpl implements EventCompilationService {
             }
         }
 
-        return eventRepository.findAllByIdIn(ids)
+        List<EventFullDto> events = eventRepository.findAllByIdIn(ids)
                 .stream()
                 .map(e -> eventMapper.toFullDto(e, eventService.getConfirmedRequests(e),
                         userMapper.toUserDto(e.getInitiator()),
                         eventService.getViewsOFEvent(e)))
+                .collect(Collectors.toList());
+
+        return eventService.fillUpViewsAndConfirmedRequests(events)
+                .stream()
+                .sorted(Comparator.comparingInt(EventFullDto::getViews)
+                        .reversed())
                 .collect(Collectors.toList());
     }
 
