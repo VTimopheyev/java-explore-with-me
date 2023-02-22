@@ -1,8 +1,10 @@
-package ru.practicum;
+package ru.practicum.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.practicum.mapper.StatisticsMapper;
+import ru.practicum.repository.StatisticsRepository;
 import ru.practicum.dto.StatsDto;
 import ru.practicum.dto.StatsRecordDto;
 import ru.practicum.model.Stat;
@@ -195,7 +197,6 @@ public class StatisticServiceImpl implements StatisticService {
                 .collect(Collectors.toList());
     }
 
-
     private List<String> getAllUris(List<Stat> allStatistics) {
         List<String> allUris = new ArrayList<>();
         for (Stat s : allStatistics) {
@@ -206,4 +207,7 @@ public class StatisticServiceImpl implements StatisticService {
         return allUris;
     }
 
+    /*public Integer getHitsForTheEvent(Timestamp start, Timestamp end, long id, Boolean unique) {
+        getStatistics(start, end, List.of("event/" + id), unique);
+    }*/
 }

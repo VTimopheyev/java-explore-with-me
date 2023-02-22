@@ -1,12 +1,14 @@
-package ru.practicum;
+package ru.practicum.repository;
 
-import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 import ru.practicum.model.Stat;
 
 import java.sql.Timestamp;
 import java.util.List;
 
-public interface StatisticsRepository extends PagingAndSortingRepository<Stat, Long> {
+@Repository
+public interface StatisticsRepository extends JpaRepository<Stat, Long> {
     List<Stat> findAllByStampAfterAndStampBeforeOrderByStamp(Timestamp start, Timestamp end);
 
     List<Stat> findAllByStampAfterAndStampBeforeAndUriInOrderByStamp(Timestamp start, Timestamp end, List<String> uris);
