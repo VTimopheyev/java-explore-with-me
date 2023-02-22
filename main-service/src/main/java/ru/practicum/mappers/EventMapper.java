@@ -5,9 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.practicum.dto.EventFullDto;
 import ru.practicum.dto.UserDto;
+import ru.practicum.model.Comment;
 import ru.practicum.model.Event;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 @Component
 @NoArgsConstructor
@@ -17,7 +19,8 @@ public class EventMapper {
     public EventFullDto toFullDto(Event event,
                                   int confirmedRequests,
                                   UserDto initiator,
-                                  int views) {
+                                  int views,
+                                  List<Comment> comments) {
         return new EventFullDto(
                 event.getId(),
                 event.getAnnotation(),
@@ -34,7 +37,8 @@ public class EventMapper {
                 event.isRequestModeration(),
                 event.getState(),
                 event.getTitle(),
-                views
+                views,
+                comments
         );
     }
 }

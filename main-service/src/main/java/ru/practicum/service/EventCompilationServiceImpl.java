@@ -44,10 +44,10 @@ public class EventCompilationServiceImpl implements EventCompilationService {
                 .stream()
                 .map(e -> eventMapper.toFullDto(e, 0,
                         userMapper.toUserDto(e.getInitiator()),
-                        0))
+                        0, new ArrayList<>()))
                 .collect(Collectors.toList());
 
-        events = eventService.fillUpViewsAndConfirmedRequests(events)
+        events = eventService.fillUpViewsCommentsAndConfirmedRequests(events)
                 .stream()
                 .sorted(Comparator.comparingInt(EventFullDto::getViews)
                         .reversed())
@@ -74,7 +74,7 @@ public class EventCompilationServiceImpl implements EventCompilationService {
                     .stream()
                     .map(e -> eventMapper.toFullDto(e, 0,
                             userMapper.toUserDto(e.getInitiator()),
-                            0))
+                            0, new ArrayList<>()))
                     .collect(Collectors.toList());
         } else {
             List<Long> ids = new ArrayList<>();
@@ -86,11 +86,11 @@ public class EventCompilationServiceImpl implements EventCompilationService {
                     .stream()
                     .map(e -> eventMapper.toFullDto(e, 0,
                             userMapper.toUserDto(e.getInitiator()),
-                            0))
+                            0, new ArrayList<>()))
                     .collect(Collectors.toList());
         }
 
-        events = eventService.fillUpViewsAndConfirmedRequests(events)
+        events = eventService.fillUpViewsCommentsAndConfirmedRequests(events)
                 .stream()
                 .sorted(Comparator.comparingInt(EventFullDto::getViews)
                         .reversed())
@@ -140,10 +140,10 @@ public class EventCompilationServiceImpl implements EventCompilationService {
                 .stream()
                 .map(e -> eventMapper.toFullDto(e, eventService.getConfirmedRequests(e),
                         userMapper.toUserDto(e.getInitiator()),
-                        eventService.getViewsOFEvent(e)))
+                        eventService.getViewsOFEvent(e), new ArrayList<>()))
                 .collect(Collectors.toList());
 
-        return eventService.fillUpViewsAndConfirmedRequests(events)
+        return eventService.fillUpViewsCommentsAndConfirmedRequests(events)
                 .stream()
                 .sorted(Comparator.comparingInt(EventFullDto::getViews)
                         .reversed())

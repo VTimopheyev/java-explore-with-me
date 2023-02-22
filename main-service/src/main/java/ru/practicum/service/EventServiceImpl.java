@@ -38,6 +38,7 @@ public class EventServiceImpl implements EventService {
     private final ParticipationRequestRepository participationRequestRepository;
     private final StatisticsClient statisticsClient;
     private final ParticipationRequestMapper participationRequestMapper;
+    private final CommentRepository commentRepository;
     private final String path = "http://stats-server:9090/stats?start={start}&end={end}&uris={uris}&unique={unique}";
 
     public EventFullDto createNewEvent(EventDto eventDto, long userId) {
@@ -78,34 +79,33 @@ public class EventServiceImpl implements EventService {
         event.setState(PENDING);
 
         return eventMapper.toFullDto(eventRepository.saveAndFlush(event),
-                0,
+                getConfirmedRequests(event),
                 userMapper.toUserDto(event.getInitiator()),
-                0);
+                getViewsOFEvent(event), new ArrayList<>());
     }
 
     public List<EventFullDto> getEventsOfInitiator(long userId, int from, int size) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
-
         PageRequest pr = PageRequest.of((from / size), size);
 
         List<EventFullDto> listToSend = eventRepository
                 .findAll(pr)
                 .stream()
-                .filter(e -> e.getInitiator().equals(user))
+                .filter(e -> e.getInitiator().equals(userRepository.findById(userId)
+                        .orElseThrow(UserNotFoundException::new)))
                 .map(e -> eventMapper.toFullDto(e, 0,
-                        userMapper.toUserDto(user),
-                        0))
+                        userMapper.toUserDto(userRepository.findById(userId)
+                                .orElseThrow(UserNotFoundException::new)),
+                        0, new ArrayList<>()))
                 .collect(Collectors.toList());
 
-        return fillUpViewsAndConfirmedRequests(listToSend)
+        return fillUpViewsCommentsAndConfirmedRequests(listToSend)
                 .stream()
                 .sorted(Comparator.comparingInt(EventFullDto::getViews)
                         .reversed())
                 .collect(Collectors.toList());
     }
 
-    public List<EventFullDto> fillUpViewsAndConfirmedRequests(List<EventFullDto> list) {
+    public List<EventFullDto> fillUpViewsCommentsAndConfirmedRequests(List<EventFullDto> list) {
         List<Long> ids = new ArrayList<>();
 
         for (EventFullDto e : list) {
@@ -117,6 +117,12 @@ public class EventServiceImpl implements EventService {
 
         List<StatsDto> statsList = getStatsForAllEvents();
 
+        List<Comment> listOfAllComments = commentRepository
+                .findAll()
+                .stream()
+                .filter(comment -> ids.contains(comment.getEvent().getId()))
+                .collect(Collectors.toList());
+
         for (EventFullDto e : list) {
             for (StatsDto dto : statsList) {
                 if (dto.getUri().equals("events/" + e.getId())) {
@@ -124,6 +130,11 @@ public class EventServiceImpl implements EventService {
                     e.setConfirmedRequests(countRequestForList(e.getId(), confirmedRequestsForAll));
                 }
             }
+            e.setConfirmedRequests(countRequestForList(e.getId(), confirmedRequestsForAll));
+            e.setComments(listOfAllComments
+                    .stream()
+                    .filter(c -> c.getEvent().getId() == e.getId())
+                    .collect(Collectors.toList()));
         }
         return list;
     }
@@ -177,14 +188,19 @@ public class EventServiceImpl implements EventService {
 
 
     public EventFullDto getSingleEventOfInitiator(long userId, long eventId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
 
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(EventNotFoundException::new);
 
+        List<Comment> comments = commentRepository
+                .findAll()
+                .stream()
+                .filter(c -> c.getEvent().getId().equals(event.getId()))
+                .collect(Collectors.toList());
+
         return eventMapper.toFullDto(
-                event, getConfirmedRequests(event), userMapper.toUserDto(user), getViewsOFEvent(event));
+                event, getConfirmedRequests(event), userMapper.toUserDto(userRepository.findById(userId)
+                        .orElseThrow(UserNotFoundException::new)), getViewsOFEvent(event), comments);
     }
 
     public Collection<ParticipationRequestDto> getParticipationRequestsForEventOfInitiator(
@@ -253,10 +269,10 @@ public class EventServiceImpl implements EventService {
                 .stream()
                 .map(e -> eventMapper.toFullDto(e, 0,
                         userMapper.toUserDto(e.getInitiator()),
-                        0))
+                        0, new ArrayList<>()))
                 .collect(Collectors.toList());
 
-        return fillUpViewsAndConfirmedRequests(listToSend)
+        return fillUpViewsCommentsAndConfirmedRequests(listToSend)
                 .stream()
                 .sorted(Comparator.comparingInt(EventFullDto::getViews)
                         .reversed())
@@ -342,10 +358,10 @@ public class EventServiceImpl implements EventService {
                 .stream()
                 .map(e -> eventMapper.toFullDto(e, 0,
                         userMapper.toUserDto(e.getInitiator()),
-                        0))
+                        0, new ArrayList<>()))
                 .collect(Collectors.toList());
 
-        return fillUpViewsAndConfirmedRequests(listToSend)
+        return fillUpViewsCommentsAndConfirmedRequests(listToSend)
                 .stream()
                 .sorted(Comparator.comparingInt(EventFullDto::getViews)
                         .reversed())
@@ -360,11 +376,17 @@ public class EventServiceImpl implements EventService {
             throw new EventNotFoundException();
         }
 
+        List<Comment> comments = commentRepository
+                .findAll()
+                .stream()
+                .filter(c -> c.getEvent().getId().equals(event.getId()))
+                .collect(Collectors.toList());
+
         return eventMapper.toFullDto(
                 event,
                 getConfirmedRequests(event),
                 userMapper.toUserDto(userRepository.findById(event.getId()).get()),
-                getViewsOFEvent(event));
+                getViewsOFEvent(event), comments);
     }
 
 
@@ -428,10 +450,16 @@ public class EventServiceImpl implements EventService {
             event.setParticipantLimit(eventDto.getParticipantLimit());
         }
 
+        List<Comment> comments = commentRepository
+                .findAll()
+                .stream()
+                .filter(c -> c.getEvent().getId().equals(event.getId()))
+                .collect(Collectors.toList());
+
         return eventMapper.toFullDto(eventRepository.saveAndFlush(event),
                 getConfirmedRequests(event),
                 userMapper.toUserDto(initiator),
-                getViewsOFEvent(event));
+                getViewsOFEvent(event), comments);
     }
 
 
@@ -535,7 +563,13 @@ public class EventServiceImpl implements EventService {
         UserDto initiator = userMapper.toUserDto(savedEvent.getInitiator());
         int views = getViewsOFEvent(savedEvent);
 
-        return eventMapper.toFullDto(savedEvent, confReq, initiator, views);
+        List<Comment> comments = commentRepository
+                .findAll()
+                .stream()
+                .filter(c -> c.getEvent().getId().equals(savedEvent.getId()))
+                .collect(Collectors.toList());
+
+        return eventMapper.toFullDto(savedEvent, confReq, initiator, views, comments);
     }
 
     private void validateEvent(EventDto event) {

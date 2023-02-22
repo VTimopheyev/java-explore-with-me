@@ -6,11 +6,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.model.Category;
+import ru.practicum.model.Comment;
 import ru.practicum.model.Location;
 import ru.practicum.status.EventStatus;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -34,5 +36,5 @@ public class EventFullDto {
     private EventStatus state;
     private String title;
     private int views;
-
+    private List<Comment> comments;
 }
