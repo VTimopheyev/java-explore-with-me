@@ -48,13 +48,13 @@ public class CommentServiceImpl implements CommentService {
     public List<Comment> getCommentsForEvent(int from, int size, long eventId) {
         PageRequest pr = PageRequest.of((from / size), size);
 
-        eventRepository.findById(eventId)
+        Event event = eventRepository.findById(eventId)
                 .orElseThrow(EventNotFoundException::new);
 
         return commentRepository
                 .findAll(pr)
                 .stream()
-                .filter(c -> c.getEvent().getId().equals(eventId))
+                .filter(c -> c.getEvent().getId().equals(event.getId()))
                 .collect(Collectors.toList());
     }
 
